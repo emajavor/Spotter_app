@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "574841859590",
+    "project_id": "spotter-app-a15b1",
+    "storage_bucket": "spotter-app-a15b1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574841859590:android:2c27689ac5092aa5ed9d87",
+        "android_client_info": {
+          "package_name": "com.javor.spotter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6wqTrxorDITshaAdP2JqczuuTzLioXFI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
