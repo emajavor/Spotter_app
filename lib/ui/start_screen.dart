@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spotter_app/ui/workout_detail_screen.dart';
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
 
@@ -32,86 +33,95 @@ class _StartScreenState extends State<StartScreen> {
             return ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
 
-
-
-                  return Container(
-                    color: Colors.white70,
-                    child: Column(
-                      children: [
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.only(
-                              top: 25.0, bottom: 5.0, left: 25.0),
-                          child: Text(
-                            state.allPosts[index].location,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WorkoutDetailScreen(
+                              workoutPost: state.allPosts[index]),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      color: Colors.white70,
+                      child: Column(
+                        children: [
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(
+                                top: 25.0, bottom: 5.0, left: 25.0),
+                            child: Text(
+                              state.allPosts[index].location,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.left,
                             ),
-                            textAlign: TextAlign.left,
                           ),
-                        ),
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.only(
-                              top: 5.0, bottom: 5.0, left: 25.0),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.alarm,
-                                size: MediaQuery.of(context).size.width * 0.06,
-                              ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(
+                                top: 5.0, bottom: 5.0, left: 25.0),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.alarm,
+                                  size: MediaQuery.of(context).size.width * 0.06,
+                                ),
 
-                              Text(
-                                state.allPosts[index].duration.toString(),
-                                style: TextStyle(fontSize: 16),
-                                textAlign: TextAlign.left,
+                                Text(
+                                  state.allPosts[index].duration.toString(),
+                                  style: TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.left,
 
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.only(
-                              top: 5.0, bottom: 5.0, left: 25.0),
-                          child: Text(
-                            state.allPosts[index].workout_type,
-                            style: TextStyle(fontSize: 16),
-                            textAlign: TextAlign.left,
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding:
+                            EdgeInsets.only(top: 5.0, bottom: 5.0, left: 25.0),
+                            child: Text(
+                              state.allPosts[index].workout_type,
+                              style: TextStyle(fontSize: 16),
+                              textAlign: TextAlign.left,
+                            ),
                           ),
-                        ),
 
-                        SizedBox(
-                          child: Image.network(
-                            state.allPosts[index].photoURL,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            height: MediaQuery.of(context).size.width * 0.4,
-                            fit: BoxFit.cover, // Ovo će prilagoditi sliku unutar okvira
+                          SizedBox(
+                            child: Image.network(
+                              state.allPosts[index].photoURL,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              height: MediaQuery.of(context).size.width * 0.4,
+                              fit: BoxFit.cover, // Ovo će prilagoditi sliku unutar okvira
+                            ),
                           ),
-                        ),
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.only(
-                              top: 5.0, bottom: 5.0, left: 25.0),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.music_note_rounded,
-                                size: MediaQuery.of(context).size.width * 0.05,
-                              ),
-                              SizedBox(width: 8.0), // Prostor između ikone i teksta
-                              Expanded(child: Text(
-                                state.allPosts[index].playlist,
-                                style: TextStyle(fontSize: 16),
-                                textAlign: TextAlign.left,
-                                overflow: TextOverflow.ellipsis,
-                              ),)
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(
+                                top: 5.0, bottom: 5.0, left: 25.0),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.music_note_rounded,
+                                  size: MediaQuery.of(context).size.width * 0.05,
+                                ),
+                                SizedBox(width: 8.0), // Prostor između ikone i teksta
+                                Expanded(child: Text(
+                                  state.allPosts[index].playlist,
+                                  style: TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.left,
+                                  overflow: TextOverflow.ellipsis,
+                                ),)
 
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -8,8 +10,10 @@ class Post {
   final String photoURL;
   final String playlist;
   final String workout_type;
+  final String intensity;
+  final List<dynamic> exercises;
 
-  Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type,});
+  Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type, required this.intensity, required this.exercises,});
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
@@ -19,6 +23,8 @@ class Post {
       photoURL: json['photoURL'] as String,
       playlist: json['playlist'] as String,
       workout_type: json['workout_type'] as String,
+      intensity: json['intensity'] as String,
+      exercises: json['Exercises'] as List<dynamic>,
     );
   }
 
@@ -30,6 +36,8 @@ class Post {
       'photoURL': photoURL,
       'playlist': playlist,
       'workout_type': workout_type,
+      'intensity': intensity,
+      'exercises': exercises,
     };
   }
 
@@ -40,7 +48,9 @@ class Post {
         location = data['location'],
         photoURL = data['photoURL'],
         playlist = data['playlist'],
-        workout_type = data['workout_type'];
+        workout_type = data['workout_type'],
+        exercises = data['Exercises'],
+        intensity = data['intensity'];
 
   Map<String, dynamic> toMap() {
     return {
@@ -49,6 +59,8 @@ class Post {
       'location': location,
       'playlist': playlist,
       'workout_type': workout_type,
+      'intensity': intensity,
+      'exercises': exercises,
       'photoURL': photoURL
     };
   }
