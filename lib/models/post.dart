@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:spotter_app/models/enums/intensity.dart';
 
 class Post {
   final int id;
@@ -10,7 +11,7 @@ class Post {
   final String photoURL;
   final String playlist;
   final String workout_type;
-  final String intensity;
+  final Intensity intensity;
   final List<dynamic> exercises;
 
   Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type, required this.intensity, required this.exercises,});
@@ -23,7 +24,7 @@ class Post {
       photoURL: json['photoURL'] as String,
       playlist: json['playlist'] as String,
       workout_type: json['workout_type'] as String,
-      intensity: json['intensity'] as String,
+      intensity: _mapIntensity(json['intensity'] as String),
       exercises: json['Exercises'] as List<dynamic>,
     );
   }
@@ -65,5 +66,22 @@ class Post {
     };
   }
 
+  static Intensity _mapIntensity(String intensityString) {
+    Intensity intensity = Intensity.none;
+
+    switch(intensityString){
+      case "Easy":
+        intensity = Intensity.Easy;
+    }
+    switch(intensityString){
+      case "Intermediate":
+        intensity = Intensity.Intermediate;
+    }
+    switch(intensityString){
+      case "Hard":
+        intensity = Intensity.Hard;
+    }
+    return intensity;
+  }
 
 }
