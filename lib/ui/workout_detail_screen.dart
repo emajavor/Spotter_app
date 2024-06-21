@@ -21,6 +21,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     setState(() {
       widget.workoutPost.intensity = newIntensity;
     });
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Intensity updated to ${newIntensity!.description.toString()}'))
+    );
   }
 
   @override
