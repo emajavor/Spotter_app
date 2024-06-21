@@ -48,7 +48,7 @@ class FirebaseRepo implements IFirebaseRepo {
   // },
   // onError: (e) => print("Error completing: $e"),
   // );
-  Future<Post> fetchAlbum() async {
+  Future<Post> fetchPost() async {
     final response = await http
         .get(Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
 

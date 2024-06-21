@@ -5,27 +5,27 @@ import 'package:flutter/cupertino.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 
 class Post {
-  final int id;
+  final String id;
   final DateTime duration;
   final String location;
   final String photoURL;
   final String playlist;
   final String workout_type;
-  final Intensity intensity;
-  final List<dynamic> exercises;
+  Intensity intensity;
+  final List<String> exercises;
 
   Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type, required this.intensity, required this.exercises,});
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      id: json['id'] as int,
+      id: json['id'] as String,
       duration: json["duration"].toDate(),
       location: json['location'] as String,
       photoURL: json['photoURL'] as String,
       playlist: json['playlist'] as String,
       workout_type: json['workout_type'] as String,
       intensity: _mapIntensity(json['intensity'] as String),
-      exercises: json['Exercises'] as List<dynamic>,
+      exercises:  List.castFrom(json['Exercises']) ,
     );
   }
 
@@ -37,7 +37,7 @@ class Post {
       'photoURL': photoURL,
       'playlist': playlist,
       'workout_type': workout_type,
-      'intensity': intensity,
+      'intensity': intensity.toString().split('.').last,
       'exercises': exercises,
     };
   }
@@ -66,6 +66,8 @@ class Post {
     };
   }
 
+
+
   static Intensity _mapIntensity(String intensityString) {
     Intensity intensity = Intensity.none;
 
@@ -84,4 +86,25 @@ class Post {
     return intensity;
   }
 
+  Future<void> updateField(String documentId, String newIntensity) async {
+    print('documentId : $documentId, newIntensity: $newIntensity');
+    try {
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(documentId)
+          .update({'intensity': newIntensity});
+      print('Document successfully updated!');
+    } catch (e) {
+      print('Error updating document: $e');
+    }
+  }
+
 }
+
+extension ListOutputExtension on List {
+  String toStringWithoutBrackets() {
+    return toString().replaceAll('[', '').replaceAll(']', '');
+  }
+
+}
+

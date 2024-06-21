@@ -13,6 +13,16 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+
+  void _updateIntensity() async {
+    Intensity newIntensity = Intensity.Intermediate;
+
+    await widget.workoutPost.updateField(widget.workoutPost.id, newIntensity!.description.toString());
+    setState(() {
+      widget.workoutPost.intensity = newIntensity;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +32,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       body: Column(
         children: <Widget>[
           Card(child: IntensityCard(intensity: widget.workoutPost.intensity,)),
-          Card(child: IntensityCard(text: 'Exercises: ${widget.workoutPost.exercises}')),
+          Card(child: IntensityCard(text: 'Exercises: ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -31,7 +41,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
                   backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
                 ),
-                onPressed: () {},
+                onPressed: _updateIntensity,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
                   child: Text(
