@@ -62,4 +62,33 @@ class FirebaseRepo implements IFirebaseRepo {
       throw Exception('Failed to load post');
     }
   }
+
+  Future<void> updateField(String documentId, String newIntensity) async {
+    print('documentId : $documentId, newIntensity: $newIntensity');
+    try {
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(documentId)
+          .update({'intensity': newIntensity});
+      print('Document successfully updated!');
+    } catch (e) {
+      print('Error updating document: $e');
+    }
+  }
+  
+  Future<Post?> getPost(String id) async {
+    Post? post;
+    final docRef = db.collection("posts").doc(id);
+    await docRef.get().then(
+          (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        print("data: $data");
+        post = Post.fromJson(data);
+        print("post: $post");
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+
+    return post;
+  }
 }

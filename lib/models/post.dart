@@ -11,7 +11,7 @@ class Post {
   final String photoURL;
   final String playlist;
   final String workout_type;
-  Intensity intensity;
+  final Intensity intensity;
   final List<String> exercises;
 
   Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type, required this.intensity, required this.exercises,});
@@ -84,19 +84,6 @@ class Post {
         intensity = Intensity.Hard;
     }
     return intensity;
-  }
-
-  Future<void> updateField(String documentId, String newIntensity) async {
-    print('documentId : $documentId, newIntensity: $newIntensity');
-    try {
-      await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(documentId)
-          .update({'intensity': newIntensity});
-      print('Document successfully updated!');
-    } catch (e) {
-      print('Error updating document: $e');
-    }
   }
 
 }

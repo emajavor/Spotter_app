@@ -17,16 +17,26 @@ class AddPost extends PostEvent{
 
 }
 class UpdatePost extends PostEvent{
-  final Post post;
+  final String id;
+  final Intensity newIntensity;
   const UpdatePost({
-    required this.post,
+    required this.id,
+    required this.newIntensity
   });
   @override
-  List<Object> get props => [post];
+  List<Object> get props => [id, newIntensity];
 
 }
 class GetPosts extends PostEvent{
   const GetPosts();
   @override
   List<Object> get props => [];
+}
+class GetPost extends PostEvent{
+  final String id;
+  const GetPost({
+    required this.id
+  });
+  @override
+  List<Object> get props => [id];
 }

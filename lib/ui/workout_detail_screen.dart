@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spotter_app/bloc/post/post_bloc.dart';
+import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/ui/widgets/intensity_card.dart';
 import '../models/enums/intensity.dart';
 import '../models/post.dart';
 
 class WorkoutDetailScreen extends StatefulWidget {
-  final Post workoutPost;
+  Post workoutPost;
 
   WorkoutDetailScreen({required this.workoutPost});
 
@@ -15,20 +18,32 @@ class WorkoutDetailScreen extends StatefulWidget {
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   void _updateIntensity() async {
-    Intensity newIntensity = Intensity.Intermediate;
+    Intensity newIntensity = Intensity.Easy;
 
-    await widget.workoutPost.updateField(widget.workoutPost.id, newIntensity!.description.toString());
-    setState(() {
-      widget.workoutPost.intensity = newIntensity;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Intensity updated to ${newIntensity!.description.toString()}'))
-    );
+    BlocProvider.of<PostBloc>(context).add(UpdatePost(id: widget.workoutPost.id, newIntensity: newIntensity)); //koristim BlocProvider da pristupim PostBlocu
+
+    
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<PostBloc, PostState>(
+      bloc: BlocProvider.of<PostBloc>(context),
+      listenWhen: (prev, curr) => curr is UpdatedPost || curr is FailedUpdatedPost,
+    listener: (context, state) {
+
+    if(state is UpdatedPost){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Intensity updated to ${Intensity.Hard.description}'))
+      );
+    }
+    else{
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Intensity not updated'))
+      );
+    }
+  },
+  child: Scaffold(
       appBar: AppBar(
         title: Text('Workout Details'),
       ),
@@ -57,7 +72,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           ),
         ],
       ),
-    );
+    ),
+);
   }
 }
 

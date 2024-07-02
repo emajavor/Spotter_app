@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
@@ -26,20 +28,22 @@ class _StartScreenState extends State<StartScreen> {
           title: Text('Your Posts')
       ),
       body: BlocBuilder<PostBloc, PostState>(
+        buildWhen: (prev, curr) => curr is FetchedPosts || curr is FetchingPosts,
         bloc: BlocProvider.of<PostBloc>(context),
         builder: (context, state) {
-
+          print("State in StartScreen is: $state");
           if(state is FetchedPosts){
             return ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
 
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WorkoutDetailScreen(
-                              workoutPost: state.allPosts[index]),
+                      Navigator.of(
+                        context).push
+                        (MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: BlocProvider.of<PostBloc>(context),
+                            child: WorkoutDetailScreen(workoutPost: state.allPosts[index],) ),
                         ),
                       );
                     },
@@ -128,6 +132,8 @@ class _StartScreenState extends State<StartScreen> {
                 separatorBuilder: (BuildContext context, int index) =>
                     const Divider(),
                 itemCount: state.allPosts.length);
+          } else if (state is FetchingPosts) {
+            return const Center(child: CircularProgressIndicator());
           } else {
             return Container();
           }
@@ -159,4 +165,5 @@ class _StartScreenState extends State<StartScreen> {
       ),
     );
   }
+
 }

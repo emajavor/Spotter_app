@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:spotter_app/models/enums/intensity.dart';
 import 'package:spotter_app/models/post.dart';
 
 import '../../repository/firebase_repo_implementation.dart';
@@ -16,13 +17,19 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddPost>(_onAddPost);
     on<UpdatePost>(_onUpdatePost);
     on<GetPosts>(_onGetPosts);
+    on<GetPost>(_onGetPost);
   }
 
   void _onAddPost(AddPost event, Emitter<PostState> emit) {
 
   }
-  void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) {
-
+  void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
+      try {
+        await _firebaseRepo.updateField(event.id, event.newIntensity.description);
+        add(GetPost(id: event.id));
+      } catch(e) {
+        //TODO emit failed state
+      }
   }
 
   void _onGetPosts(GetPosts event, Emitter<PostState> emit) async {
@@ -36,4 +43,21 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     } catch (e) {
       //TODO emit fetching failed state
     }
-  }}
+  }
+
+
+
+  FutureOr<void> _onGetPost(GetPost event, Emitter<PostState> emit) async {
+    try {
+      Post? post = await _firebaseRepo.getPost(event.id);
+      if(post != null) {
+        emit(UpdatedPost(post));
+
+      } else {
+        emit(FailedUpdatedPost("No post"));
+      }
+    } catch(e) {
+        emit(FailedUpdatedPost("Failed to update Post"));
+    }
+  }
+}
