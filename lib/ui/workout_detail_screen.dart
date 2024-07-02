@@ -8,7 +8,7 @@ import '../models/post.dart';
 
 class WorkoutDetailScreen extends StatefulWidget {
   Post workoutPost;
-
+  //Intensity currentIntensity = Intensity.none;
   WorkoutDetailScreen({required this.workoutPost});
 
   @override
@@ -16,66 +16,110 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
+  void _updateIntensity(Intensity newIntensity) async {
 
-  void _updateIntensity() async {
-    Intensity newIntensity = Intensity.Easy;
-
-    BlocProvider.of<PostBloc>(context).add(UpdatePost(id: widget.workoutPost.id, newIntensity: newIntensity)); //koristim BlocProvider da pristupim PostBlocu
-
-    
+    BlocProvider.of<PostBloc>(context).add(UpdatePost(
+        id: widget.workoutPost.id,
+        newIntensity: newIntensity
+      )//koristim BlocProvider da pristupim PostBlocu
+    );
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return BlocListener<PostBloc, PostState>(
       bloc: BlocProvider.of<PostBloc>(context),
-      listenWhen: (prev, curr) => curr is UpdatedPost || curr is FailedUpdatedPost,
-    listener: (context, state) {
-
-    if(state is UpdatedPost){
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Intensity updated to ${Intensity.Hard.description}'))
-      );
-    }
-    else{
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Intensity not updated'))
-      );
-    }
-  },
-  child: Scaffold(
-      appBar: AppBar(
-        title: Text('Workout Details'),
-      ),
-      body: Column(
-        children: <Widget>[
-          Card(child: IntensityCard(intensity: widget.workoutPost.intensity,)),
-          Card(child: IntensityCard(text: 'Exercises: ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
-                ),
-                onPressed: _updateIntensity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                  child: Text(
-                    'UPDATE',
-                    style: TextStyle(fontSize: 20),
+      listenWhen: (prev, curr) =>
+          curr is UpdatedPost || curr is FailedUpdatedPost,
+      listener: (context, state) {
+        if (state is UpdatedPost) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Intensity updated to ${state.updatedPost.intensity.description}')));
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Intensity not updated')));
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Workout Details'),
+        ),
+        body: BlocBuilder<PostBloc, PostState>(
+          builder: (context, state) {
+            print("State in DetailsScreen is: $state");
+            Intensity currentIntensity = widget.workoutPost.intensity;
+            if (state is UpdatedPost) {
+              currentIntensity = state.updatedPost.intensity;
+            }
+            if (state is FetchedPosts || state is UpdatedPost) {
+              return Column(
+                children: <Widget>[
+                  Card(
+                      child: IntensityCard(
+                      intensity: currentIntensity,
+                  )),
+                  Card(
+                      child: IntensityCard(
+                          text:
+                              'Exercises: ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.teal),
+                        ),
+                        onPressed: () => showDialog<String>(
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            title: const Text('Update the Intensity'),
+                            content: const Text(
+                                'Select the Intensity of your workout'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    _updateIntensity(Intensity.Easy),
+                                child: const Text('Easy'),
+                              ),
+                              TextButton(
+                                onPressed: () =>_updateIntensity(Intensity.Intermediate),
+                                child: const Text('Intermediate'),
+                              ),
+                              TextButton(
+                                onPressed: () => _updateIntensity(Intensity.Hard),
+                                child: const Text('Hard'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0, vertical: 15.0),
+                          child: Text(
+                            'UPDATE',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-          ),
-        ],
+                ],
+              );
+            } else if (state is UpdatingPost) {
+              return const Center(child: CircularProgressIndicator());
+            } else {
+              return Container();
+            }
+          },
+        ),
       ),
-    ),
-);
+    );
   }
 }
-
-
-

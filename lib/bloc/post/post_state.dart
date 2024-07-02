@@ -36,21 +36,22 @@ class UpdatedPost extends PostState{
   final Post updatedPost;
 
   UpdatedPost(this.updatedPost);
+  @override
+  List<Object> get props => [updatedPost];
 }
 
 class FailedUpdatedPost extends PostState{
-  // final Post? failedUpdatedPost;
-  //
-  // FailedUpdatedPost(this.failedUpdatedPost);
   final String message;
 
   FailedUpdatedPost(this.message);
+
+  @override
+  List<Object> get props => [message];
 }
 
 class UpdatingPost extends PostState{
-  final Post updatingPost;
-
-  UpdatingPost(this.updatingPost);
+  @override
+  List<Object> get props => [];
 }
 
 //TODO create failed fetching state with error message attribute

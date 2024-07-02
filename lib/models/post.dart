@@ -11,7 +11,7 @@ class Post {
   final String photoURL;
   final String playlist;
   final String workout_type;
-  final Intensity intensity;
+  Intensity intensity;
   final List<String> exercises;
 
   Post({required this.id, required this.duration, required this.location, required this.photoURL, required this.playlist, required this.workout_type, required this.intensity, required this.exercises,});
