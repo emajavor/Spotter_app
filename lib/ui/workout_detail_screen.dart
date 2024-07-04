@@ -16,14 +16,32 @@ class WorkoutDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
-  void _updateIntensity(Intensity newIntensity) async {
-
+  void _updateIntensity(Intensity? newIntensity) async {
     BlocProvider.of<PostBloc>(context).add(UpdatePost(
         id: widget.workoutPost.id,
-        newIntensity: newIntensity
+        newIntensity: newIntensity!
       )//koristim BlocProvider da pristupim PostBlocu
     );
+    widget.workoutPost.intensity = newIntensity; // pamti vrijednost i nakon popanja prozorcica
     Navigator.of(context).pop();
+    print("This is widget.workoutpost.intensity: ${widget.workoutPost.intensity}");
+
+  }
+  Widget _selectIntensityOption(Intensity intensity, String label) {
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        Radio<Intensity>(
+          value: intensity,
+          groupValue: widget.workoutPost.intensity,
+          onChanged: (Intensity? value) {
+            _updateIntensity(value);
+          },
+        ),
+      ],
+    );
   }
 
   @override
@@ -50,10 +68,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         body: BlocBuilder<PostBloc, PostState>(
           builder: (context, state) {
             print("State in DetailsScreen is: $state");
-            Intensity currentIntensity = widget.workoutPost.intensity;
+            Intensity currentIntensity;
             if (state is UpdatedPost) {
               currentIntensity = state.updatedPost.intensity;
+              print("state.updatedPost.intensity is ${state.updatedPost.intensity}");
             }
+            currentIntensity = widget.workoutPost.intensity;//zastoooooooooooooooooo
+            print("current intensity is ${currentIntensity}");
+            print("widget.workoutPost.intensity is ${widget.workoutPost.intensity}");
             if (state is FetchedPosts || state is UpdatedPost) {
               return Column(
                 children: <Widget>[
@@ -83,19 +105,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             content: const Text(
                                 'Select the Intensity of your workout'),
                             actions: <Widget>[
-                              TextButton(
-                                onPressed: () =>
-                                    _updateIntensity(Intensity.Easy),
-                                child: const Text('Easy'),
-                              ),
-                              TextButton(
-                                onPressed: () =>_updateIntensity(Intensity.Intermediate),
-                                child: const Text('Intermediate'),
-                              ),
-                              TextButton(
-                                onPressed: () => _updateIntensity(Intensity.Hard),
-                                child: const Text('Hard'),
-                              ),
+                              _selectIntensityOption(Intensity.Easy, 'Easy'),
+                              _selectIntensityOption(Intensity.Intermediate, 'Intermediate'),
+                              _selectIntensityOption(Intensity.Hard, 'Hard'),
                             ],
                           ),
                         ),
@@ -122,4 +134,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       ),
     );
   }
+
 }
+
+

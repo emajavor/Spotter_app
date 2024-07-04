@@ -34,9 +34,10 @@ class GetPosts extends PostEvent{
 }
 class GetPost extends PostEvent{
   final String id;
+  final Intensity intensity;
   const GetPost({
-    required this.id
-
+    required this.id,
+    required this.intensity
   });
   @override
   List<Object> get props => [id];

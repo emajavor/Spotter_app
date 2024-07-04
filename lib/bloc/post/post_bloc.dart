@@ -26,7 +26,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
       try {
         await _firebaseRepo.updateField(event.id, event.newIntensity.description);
-        add(GetPost(id: event.id));
+        add(GetPost(id: event.id, intensity: event.newIntensity));
       } catch(e) {
         //TODO emit failed state
       }
