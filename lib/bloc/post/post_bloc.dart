@@ -24,11 +24,13 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
   }
   void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
+    print('Updating post with id: ${event.id} to intensity: ${event.newIntensity}');
+    //updatePost event sadrzi id i intensity novi
       try {
-        await _firebaseRepo.updateField(event.id, event.newIntensity.description);
-        add(GetPost(id: event.id, intensity: event.newIntensity));
+        await _firebaseRepo.updateField(event.id, event.newIntensity.description); //updateam post tj field
+        add(GetPost(id: event.id, intensity: event.newIntensity)); //fetcham updated post
       } catch(e) {
-        //TODO emit failed state
+        emit(FailedUpdatedPost(e.toString()));
       }
   }
 
@@ -41,18 +43,17 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
       emit(FetchedPosts(posts));
     } catch (e) {
-      //TODO emit fetching failed state
-    }
+      emit(FetchingFailed(e.toString()));    }
   }
 
 
 
   FutureOr<void> _onGetPost(GetPost event, Emitter<PostState> emit) async {
     try {
-      Post? post = await _firebaseRepo.getPost(event.id);
-      if(post != null) {
-        emit(UpdatedPost(post));
+      Post? post = await _firebaseRepo.getPost(event.id);//fetcha post s tim id-em
 
+      if (post != null) {
+        emit(UpdatedPost(post));
       } else {
         emit(FailedUpdatedPost("No post"));
       }

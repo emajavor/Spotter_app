@@ -50,13 +50,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     return BlocListener<PostBloc, PostState>(
       bloc: BlocProvider.of<PostBloc>(context),
       listenWhen: (prev, curr) =>
-          curr is UpdatedPost || curr is FailedUpdatedPost,
+          curr is UpdatedPost || curr is FailedUpdatedPost || curr is FetchedPost,
       listener: (context, state) {
         if (state is UpdatedPost) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(
                   'Intensity updated to ${state.updatedPost.intensity.description}')));
-        } else {
+        }
+        else {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text('Intensity not updated')));
         }
@@ -66,11 +67,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           title: Text('Workout Details'),
         ),
         body: BlocBuilder<PostBloc, PostState>(
+          bloc: BlocProvider.of<PostBloc>(context),
+          buildWhen: (prev, curr) => curr is UpdatedPost || curr is FetchedPosts,
           builder: (context, state) {
             print("State in DetailsScreen is: $state");
             Intensity currentIntensity;
             if (state is UpdatedPost) {
               currentIntensity = state.updatedPost.intensity;
+              print("Post is: ${state.updatedPost.id}");
+
               print("state.updatedPost.intensity is ${state.updatedPost.intensity}");
             }
             currentIntensity = widget.workoutPost.intensity;//zastoooooooooooooooooo

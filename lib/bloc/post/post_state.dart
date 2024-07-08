@@ -28,9 +28,23 @@ class FetchedPosts extends PostState{
 
   @override
   List<Object> get props => [allPosts];
-
-
 }
+
+class FetchedPost extends PostState{
+  final Post fetchedPost;
+
+  FetchedPost(this.fetchedPost);
+  @override
+  List<Object> get props => [fetchedPost];
+}
+class FetchingFailed extends PostState{
+  final String message;
+  FetchingFailed(this.message);
+
+   @override
+  List<Object> get props => [message];
+}
+
 
 class UpdatedPost extends PostState{
   final Post updatedPost;
