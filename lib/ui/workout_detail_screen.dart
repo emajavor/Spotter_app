@@ -85,17 +85,23 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
               return Column(
                 children: <Widget>[
                   Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
                       child: IntensityCard(
                       intensity: currentIntensity,
                   )),
                   Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
                       child: IntensityCard(
                           text:
                               'Exercises: ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 10.0),
+                      padding: const EdgeInsets.only(
+                          top: 15.0, bottom: 10.0),
                       child: ElevatedButton(
                         style: ButtonStyle(
                           foregroundColor:
