@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../models/enums/intensity.dart';
 
@@ -12,17 +13,17 @@ class IntensityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 400,
-      height: 120,
+      width: MediaQuery.of(context).size.width * 0.93,
+      height: MediaQuery.of(context).size.height * 0.15,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.only(left: MediaQuery.sizeOf(context).width * 0.05) ,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(text, style: TextStyle(fontSize: 18)),
             if (intensity != null) ...[
               Text('Intensity: ${intensity!.description}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: 20),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.03),
               Row(
                 children: _buildIntensityBars(intensity!),
 

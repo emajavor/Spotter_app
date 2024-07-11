@@ -95,9 +95,12 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
-                      child: IntensityCard(
-                          text:
-                              'Exercises: ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: IntensityCard(
+                            text:
+                                'Exercises:\n ${widget.workoutPost.exercises.toStringWithoutBrackets()}'),
+                      )),
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.only(
