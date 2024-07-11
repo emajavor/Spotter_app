@@ -51,6 +51,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   void addWorkoutTypeTextField() {
     final newWorkoutType = workoutTypeController.text;
     if (newWorkoutType.isNotEmpty) {
+      _workoutType = newWorkoutType;
       _workoutTypeStreamController.sink.add(newWorkoutType);
       workoutTypeController.clear();
     }
@@ -167,26 +168,26 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         StreamBuilder<String>(
                           stream: _workoutTypeStreamController.stream,
                           builder: (context, snapshot) {
-                            if (snapshot.hasData) {
+                            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                               return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                               child: Text(snapshot.data!),
                               );
                             } else {
-                              return Container();
+                              return Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                                child: TextField(
+                                  controller: workoutTypeController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText: 'Enter a workout type',
+                                  ),
+                                ),
+                              );
                             }
                           },
                         ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                          child: TextField(
-                            controller: workoutTypeController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Enter a workout type',
-                            ),
-                          ),
-                        ),
+
                         Center(
                           child: Padding(
                             padding: EdgeInsets.only(bottom: 15.0),
