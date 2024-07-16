@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -38,15 +39,6 @@ class FirebaseRepo implements IFirebaseRepo {
      return postList;
   }
 
-  // db.collection("cities").get().then(
-  // (querySnapshot) {
-  // print("Successfully completed");
-  // for (var docSnapshot in querySnapshot.docs) {
-  // print('${docSnapshot.id} => ${docSnapshot.data()}');
-  // }
-  // },
-  // onError: (e) => print("Error completing: $e"),
-  // );
   Future<Post> fetchPost() async {
     final response = await http
         .get(Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
@@ -89,5 +81,12 @@ class FirebaseRepo implements IFirebaseRepo {
     );
 
     return post;
+  }
+  Future<void> addPost(Array exercises, DateTime duration, String intensity, String location, String photoURL, String playlist, String workoutType) async {
+    // Add a new document with a generated id.
+    final post = {"Exercises": [exercises], "duration": duration, "intensity": intensity, "location": location, "photoURL": photoURL, "playlist": playlist, "workout_type": workoutType};
+
+    db.collection("posts").add(post).then((documentSnapshot) =>
+        print("Added Data with ID: ${documentSnapshot.id}"));
   }
 }

@@ -125,8 +125,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             ],
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
                               horizontal: 20.0, vertical: 15.0),
                           child: Text(
                             'UPDATE',

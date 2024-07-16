@@ -31,7 +31,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
   late final StreamController<String> _locationStreamController = StreamController<String>.broadcast();
   late final StreamController<String> _playlistStreamController = StreamController<String>.broadcast();
   late final StreamController<XFile?> _imageStreamController = StreamController<XFile?>.broadcast();
-  late final StreamController<TimeOfDay?> _timeStreamController = StreamController<TimeOfDay?>.broadcast();
   late final StreamController<DateTime?> _dateStreamController = StreamController<DateTime?>.broadcast();
   final List<String> _exercises = [];
   late final String _workoutType;
@@ -60,6 +59,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     _locationStreamController.close();
     _playlistStreamController.close();
     _imageStreamController.close();
+    _dateStreamController.close();
     super.dispose();
   }
 
@@ -714,7 +714,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     child: Padding(
                       padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
                       child: ElevatedButton(
-                        onPressed: editLocationTextField, //TODO implement addPost
+                        onPressed: addPost, //TODO implement addPost
                         style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
                         ),
@@ -735,5 +735,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
         ),
       ),
     );
+  }
+
+  void addPost() {
+    print("Add post kliknu ovo je location: ${locationController.text}");
   }
 }

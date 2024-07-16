@@ -8,12 +8,26 @@ class PostEvent extends Equatable {
   List<Object?> get props => throw UnimplementedError();
 }
 class AddPost extends PostEvent{
-  final Post post;
+  final Array exercises;
+  final DateTime duration;
+  final Intensity intensity;
+  final String location;
+  final String photoURL;
+  final String playlist;
+  final String workoutType;
+
   const AddPost({
-    required this.post,
+    required this.exercises,
+    required this.duration,
+    required this.intensity,
+    required this.location,
+    required this.photoURL,
+    required this.playlist,
+    required this.workoutType
+
   });
   @override
-  List<Object> get props => [post];
+  List<Object> get props => [exercises, duration, intensity, location, photoURL, playlist, workoutType];
 
 }
 class UpdatePost extends PostEvent{

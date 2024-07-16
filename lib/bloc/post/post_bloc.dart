@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -20,8 +21,12 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<GetPost>(_onGetPost);
   }
 
-  void _onAddPost(AddPost event, Emitter<PostState> emit) {
-
+  Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
+      try {
+        await _firebaseRepo.addPost(event.exercises, event.duration, event.intensity.description, event.location, event.photoURL, event.playlist, event.workoutType);
+      } catch(e){
+        emit(FailedAddedPost(e.toString()));
+      }
   }
   void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
     print('Updating post with id: ${event.id} to intensity: ${event.newIntensity}');
