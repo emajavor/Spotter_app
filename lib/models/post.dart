@@ -59,7 +59,7 @@ class Post {
       'location': location,
       'playlist': playlist,
       'workout_type': workout_type,
-      'intensity': intensity,
+      'intensity': intensity.description,
       'exercises': exercises,
       'photoURL': photoURL
     };

@@ -2,6 +2,7 @@ part of 'post_bloc.dart';
 
 class PostState extends Equatable {
   const PostState();
+
   @override
   List<Object?> get props => [];
 
@@ -33,13 +34,15 @@ class FetchedPosts extends PostState{
 class FetchedPost extends PostState{
   final Post fetchedPost;
 
-  FetchedPost(this.fetchedPost);
+  const FetchedPost(this.fetchedPost);
+
   @override
   List<Object> get props => [fetchedPost];
 }
 class FetchingFailed extends PostState{
   final String message;
-  FetchingFailed(this.message);
+
+  const FetchingFailed(this.message);
 
    @override
   List<Object> get props => [message];
@@ -49,7 +52,8 @@ class FetchingFailed extends PostState{
 class UpdatedPost extends PostState{
   final Post updatedPost;
 
-  UpdatedPost(this.updatedPost);
+  const UpdatedPost(this.updatedPost);
+
   @override
   List<Object> get props => [updatedPost];
 }
@@ -57,13 +61,14 @@ class UpdatedPost extends PostState{
 class FailedUpdatedPost extends PostState{
   final String message;
 
-  FailedUpdatedPost(this.message);
+  const FailedUpdatedPost(this.message);
 
   @override
   List<Object> get props => [message];
 }
 
 class UpdatingPost extends PostState{
+
   @override
   List<Object> get props => [];
 }
@@ -71,20 +76,22 @@ class UpdatingPost extends PostState{
 class AddedPost extends PostState{
   final Post addedPost;
 
-  AddedPost(this.addedPost);
+  const AddedPost(this.addedPost);
+
   @override
   List<Object> get props => [addedPost];
 }
 class FailedAddedPost  extends PostState{
   final String message;
 
-  FailedAddedPost(this.message);
+  const FailedAddedPost(this.message);
 
   @override
   List<Object> get props => [message];
 }
 
 class AddingPost extends PostState{
+
   @override
   List<Object> get props => [];
 }

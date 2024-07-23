@@ -35,9 +35,9 @@ class _StartScreenState extends State<StartScreen> {
         ),
         );
       },
-      child: Icon(Icons.add),),
+      child: const Icon(Icons.add),),
       appBar: AppBar(
-          title: Text('Your Posts'),
+          title: const Text('Your Posts'),
       ),
       body: BlocBuilder<PostBloc, PostState>(
         buildWhen: (prev, curr) => curr is FetchedPosts || curr is FetchingPosts,
@@ -59,7 +59,7 @@ class _StartScreenState extends State<StartScreen> {
                       );
                     },
                     child: Container(
-                      padding: EdgeInsets.only(
+                      padding: const EdgeInsets.only(
                           top: 10.0, bottom: 10.0, left: 10.0, right: 10.0),
                       color: Colors.white,
                       child: Column(
@@ -71,7 +71,7 @@ class _StartScreenState extends State<StartScreen> {
                                 child: SizedBox(
                                     child: ClipOval(
                                       child: Image(
-                                       image: NetworkImage('https://avatar.iran.liara.run/public/boy?username=Ash'),
+                                       image: const NetworkImage('https://avatar.iran.liara.run/public/boy?username=Ash'),
                                         width: MediaQuery.of(context).size.width * 0.15,
                                         height: MediaQuery.of(context).size.width * 0.15,
                                         fit: BoxFit.cover,
@@ -90,7 +90,7 @@ class _StartScreenState extends State<StartScreen> {
                                           top: 20.0, bottom: 5.0, right: 15.0),
                                       child: Text(
                                         state.allPosts[index].location,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),
@@ -111,7 +111,7 @@ class _StartScreenState extends State<StartScreen> {
 
                                           Text(
                                             state.allPosts[index].duration.toString(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: const TextStyle(fontSize: 16),
                                             textAlign: TextAlign.right,
 
                                           ),
@@ -127,10 +127,10 @@ class _StartScreenState extends State<StartScreen> {
                           Container(
                             alignment: Alignment.centerLeft,
                             padding:
-                            EdgeInsets.only(top: 20.0, bottom: 10.0, left: 15.0),
+                            const EdgeInsets.only(top: 20.0, bottom: 10.0, left: 15.0),
                             child: Text(
                               state.allPosts[index].workout_type,
-                              style: TextStyle(fontSize: 20),
+                              style: const TextStyle(fontSize: 20),
                               textAlign: TextAlign.left,
                             ),
                           ),
@@ -146,7 +146,7 @@ class _StartScreenState extends State<StartScreen> {
                           ),
                           Container(
                             alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.only(
+                            padding: const EdgeInsets.only(
                                 top: 15.0, bottom: 5.0, left: 15.0),
                             child: Row(
                               children: [
@@ -154,10 +154,10 @@ class _StartScreenState extends State<StartScreen> {
                                   Icons.music_note_rounded,
                                   size: MediaQuery.of(context).size.width * 0.05,
                                 ),
-                                SizedBox(width: 8.0), // Prostor između ikone i teksta
+                                const SizedBox(width: 8.0), // Prostor između ikone i teksta
                                 Expanded(child: Text(
                                   state.allPosts[index].playlist,
-                                  style: TextStyle(fontSize: 16),
+                                  style: const TextStyle(fontSize: 16),
                                   textAlign: TextAlign.left,
                                   overflow: TextOverflow.ellipsis,
                                 ),)

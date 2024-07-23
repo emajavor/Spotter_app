@@ -12,24 +12,29 @@ class IntensityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.93,
-      height: MediaQuery.of(context).size.height * 0.15,
-      child: Padding(
-        padding: EdgeInsets.only(left: MediaQuery.sizeOf(context).width * 0.05) ,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text, style: TextStyle(fontSize: 18)),
-            if (intensity != null) ...[
-              Text('Intensity: ${intensity!.description}', style: TextStyle(fontSize: 18)),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-              Row(
-                children: _buildIntensityBars(intensity!),
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.93,
+        height: MediaQuery.of(context).size.height * 0.15,
+        child: Padding(
+          padding: EdgeInsets.only(left: MediaQuery.sizeOf(context).width * 0.05) ,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(text, style: TextStyle(fontSize: 18)),
+              if (intensity != null) ...[
+                Text('Intensity: ${intensity!.description}', style: TextStyle(fontSize: 18)),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+                Row(
+                  children: _buildIntensityBars(intensity!),
 
-              ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

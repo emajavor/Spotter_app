@@ -20,11 +20,10 @@ class FirebaseRepo implements IFirebaseRepo {
 
     List<Post> postList = [];
     CollectionReference collectionRef = db.collection("posts");
-    // Get docs from collection reference
     QuerySnapshot querySnapshot = await collectionRef.get();
-    // Get data from docs and convert map to List
     final posts = querySnapshot.docs.map((doc) => doc.data()).toList();
-    posts.forEach((element) {
+
+    for (var element in posts) {
       try {
         print(element);
         Post post = Post.fromJson(element as Map<String, dynamic>);
@@ -33,29 +32,28 @@ class FirebaseRepo implements IFirebaseRepo {
         print("error: ${e.toString()}");
       }
 
-    });
-    debugPrint("Posts list ${postList.toString()}");
-    //
-     return postList;
-  }
-
-  Future<Post> fetchPost() async {
-    final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/posts/1'));
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Post.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load post');
     }
+    debugPrint("Posts list ${postList.toString()}");
+    return postList;
   }
 
+  // Future<Post> fetchPost() async {
+  //   final response = await http
+  //       .get(Uri.parse(''));
+  //
+  //   if (response.statusCode == 200) {
+  //     // If the server did return a 200 OK response,
+  //     // then parse the JSON.
+  //     return Post.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  //   } else {
+  //     // If the server did not return a 200 OK response,
+  //     // then throw an exception.
+  //     throw Exception('Failed to load post');
+  //   }
+  // }
+
+  @override
   Future<void> updateField(String documentId, String newIntensity) async {
-    print('documentId : $documentId, newIntensity: $newIntensity');
     try {
       await FirebaseFirestore.instance
           .collection('posts')
@@ -73,20 +71,17 @@ class FirebaseRepo implements IFirebaseRepo {
     await docRef.get().then(
           (DocumentSnapshot doc) {
         final data = doc.data() as Map<String, dynamic>;
-        print("data: $data");
         post = Post.fromJson(data);
-        print("post: $post");
       },
       onError: (e) => print("Error getting document: $e"),
     );
 
     return post;
   }
-  Future<void> addPost(Array exercises, DateTime duration, String intensity, String location, String photoURL, String playlist, String workoutType) async {
-    // Add a new document with a generated id.
-    final post = {"Exercises": [exercises], "duration": duration, "intensity": intensity, "location": location, "photoURL": photoURL, "playlist": playlist, "workout_type": workoutType};
+  Future<void> addPost(Post addedPost) async {
+    final post = addedPost;
 
-    db.collection("posts").add(post).then((documentSnapshot) =>
+    db.collection("posts").add(post.toMap()).then((documentSnapshot) =>
         print("Added Data with ID: ${documentSnapshot.id}"));
   }
 }

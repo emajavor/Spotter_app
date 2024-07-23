@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:spotter_app/models/post.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
@@ -13,12 +16,17 @@ import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 class AddPostScreen extends StatefulWidget {
   AddPostScreen();
 
+
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
   //Intensity? selectedIntensity;
+
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
+
+  FirebaseStorage _storage = FirebaseStorage.instance;
+
   final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
   final locationController = TextEditingController();
@@ -32,8 +40,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
   late final StreamController<String> _playlistStreamController = StreamController<String>.broadcast();
   late final StreamController<XFile?> _imageStreamController = StreamController<XFile?>.broadcast();
   late final StreamController<DateTime?> _dateStreamController = StreamController<DateTime?>.broadcast();
+
   final List<String> _exercises = [];
   late final String _workoutType;
+  late final String _newWorkoutType;
+  late final String newLocation;
+  late final String newPlaylist;
+  late final XFile? pickedFile;
+  late final DateTime? pickedDate;
   late final String _location;
   late final String _playlist;
   late final StreamController<bool> canEdit = true as StreamController<bool>;
@@ -72,11 +86,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
   }
   void addWorkoutTypeTextField() {
-    final newWorkoutType = workoutTypeController.text;
+    _newWorkoutType = workoutTypeController.text;
 
-    if (newWorkoutType.isNotEmpty) {
-      _workoutType = newWorkoutType;
-      _workoutTypeStreamController.sink.add(newWorkoutType);
+    if (_newWorkoutType.isNotEmpty) {
+      _workoutType = _newWorkoutType;
+      _workoutTypeStreamController.sink.add(_newWorkoutType);
       workoutTypeController.clear();
       canEdit.sink.add(false);
     }
@@ -85,7 +99,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     canEdit.sink.add(true);
   }
   void addLocationTextField() {
-    final newLocation = locationController.text;
+    newLocation = locationController.text;
 
     if (newLocation.isNotEmpty) {
       _location = newLocation;
@@ -99,7 +113,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   void addPlaylistTextField() {
-    final newPlaylist = playlistController.text;
+    newPlaylist = playlistController.text;
 
     if (newPlaylist.isNotEmpty) {
       _playlist = newPlaylist;
@@ -112,7 +126,16 @@ class _AddPostScreenState extends State<AddPostScreen> {
     canEdit.sink.add(true);
   }
   void addPhoto() async{
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    Reference reference = _storage.ref().child("images/");
+
+
+    final storageRef = FirebaseStorage.instance.ref();
+
+
     if (pickedFile != null) {
       //_image = pickedFile;
       _imageStreamController.sink.add(pickedFile);
@@ -120,7 +143,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   Future<void> addDateTime() async{
-    final pickedDate = await showOmniDateTimePicker(
+    pickedDate = await showOmniDateTimePicker(
       context: context,/*
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
@@ -132,11 +155,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   void editDateTime() async {
-    DateTime? newDate = await showOmniDateTimePicker(
+    final newDate = await showOmniDateTimePicker(
       context: context,
-      // initialDate: selectedDate ?? DateTime.now(),
-      // firstDate: DateTime(2000),
-      // lastDate: DateTime(2100),
     );
 
     if (newDate != null) {
@@ -371,7 +391,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                         child: const Padding(
                                           padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
                                           child: Text(
-                                            'EDIT LOCATION',
+                                            'EDIT',
                                             style: TextStyle(fontSize: 16, color: Colors.white),
                                           ),
                                         ),
@@ -534,36 +554,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Intermediate'),
-                              Radio<Intensity>(
-                                value: Intensity.Intermediate,
-                                groupValue: selectedIntensity,
-                                onChanged: (Intensity? value) {
-                                  setState(() {
-                                    selectedIntensity = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Hard'),
-                              Radio<Intensity>(
-                                value: Intensity.Hard,
-                                groupValue: selectedIntensity,
-                                onChanged: (Intensity? value) {
-                                  setState(() {
-                                    selectedIntensity = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                          _buildIntensityItem(Intensity.Intermediate),
+                          _buildIntensityItem(Intensity.Hard),
+
                         ],
                       ),
                     ),
@@ -714,7 +707,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     child: Padding(
                       padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
                       child: ElevatedButton(
-                        onPressed: addPost, //TODO implement addPost
+                        onPressed: addPost,
                         style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
                         ),
@@ -737,7 +730,38 @@ class _AddPostScreenState extends State<AddPostScreen> {
     );
   }
 
-  void addPost() {
-    print("Add post kliknu ovo je location: ${locationController.text}");
+  Widget _buildIntensityItem(Intensity intensity) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(intensity.description),
+        Radio<Intensity>(
+          value: intensity,
+          groupValue: selectedIntensity,
+          onChanged: (Intensity? value) {
+            setState(() {
+              selectedIntensity = value;
+            });
+          },
+        ),
+      ],
+    );
   }
+
+  void addPost() {
+    Post addedPost = Post(id: "aa", duration: pickedDate ?? DateTime.now() , location: newLocation, photoURL: pickedFile.toString(), playlist: newPlaylist, workout_type: _newWorkoutType, intensity: selectedIntensity ?? Intensity.Easy, exercises: _exercises) ;
+    // if(newWorkoutType.isNotEmpty && pickedDate != null && pickedFile != null && newLocation.isNotEmpty && newPlaylist.isNotEmpty ){
+      BlocProvider.of<PostBloc>(context).add(AddPost(
+          // exercises: _exercises,
+          // duration: pickedDate!,
+          // intensity: selectedIntensity!,
+          // location: newLocation,
+          // photoURL: pickedFile.toString(),
+          // playlist: newPlaylist,
+          // workoutType: newWorkoutType
+        addedPost: addedPost
+      ));
+    // }
+  }
+
 }
