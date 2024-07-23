@@ -45,134 +45,7 @@ class _StartScreenState extends State<StartScreen> {
         builder: (context, state) {
           print("State in StartScreen is: $state");
           if(state is FetchedPosts){
-            return ListView.separated(
-                itemBuilder: (BuildContext context, int index) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(
-                        context).push
-                        (MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: BlocProvider.of<PostBloc>(context),
-                            child: WorkoutDetailScreen(workoutPost: state.allPosts[index],) ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(
-                          top: 10.0, bottom: 10.0, left: 10.0, right: 10.0),
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 25.0, left: 15.0, bottom: 10.0),
-                                child: SizedBox(
-                                    child: ClipOval(
-                                      child: Image(
-                                       image: const NetworkImage('https://avatar.iran.liara.run/public/boy?username=Ash'),
-                                        width: MediaQuery.of(context).size.width * 0.15,
-                                        height: MediaQuery.of(context).size.width * 0.15,
-                                        fit: BoxFit.cover,
-                                      ),// Ovo će prilagoditi sliku unutar okvira
-                                    ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(
-                                          top: 20.0, bottom: 5.0, right: 15.0),
-                                      child: Text(
-                                        state.allPosts[index].location,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                    Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(
-                                          top: 5.0, bottom: 5.0, right: 15.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          Icon(
-                                            Icons.alarm,
-                                            size: MediaQuery.of(context).size.width * 0.06,
-                                          ),
-
-                                          Text(
-                                            state.allPosts[index].duration.toString(),
-                                            style: const TextStyle(fontSize: 16),
-                                            textAlign: TextAlign.right,
-
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding:
-                            const EdgeInsets.only(top: 20.0, bottom: 10.0, left: 15.0),
-                            child: Text(
-                              state.allPosts[index].workout_type,
-                              style: const TextStyle(fontSize: 20),
-                              textAlign: TextAlign.left,
-                            ),
-                          ),
-
-                          SizedBox(
-                            child: Image.network(
-                              state.allPosts[index].photoURL,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              height: MediaQuery.of(context).size.width * 0.6,
-                              fit: BoxFit.cover, // Ovo će prilagoditi sliku unutar okvira
-
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.only(
-                                top: 15.0, bottom: 5.0, left: 15.0),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.music_note_rounded,
-                                  size: MediaQuery.of(context).size.width * 0.05,
-                                ),
-                                const SizedBox(width: 8.0), // Prostor između ikone i teksta
-                                Expanded(child: Text(
-                                  state.allPosts[index].playlist,
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.left,
-                                  overflow: TextOverflow.ellipsis,
-                                ),)
-
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) =>
-                    const Divider(),
-                itemCount: state.allPosts.length);
+            return postList(state);
           } else if (state is FetchingPosts) {
             return const Center(child: CircularProgressIndicator());
           } else {
@@ -205,6 +78,145 @@ class _StartScreenState extends State<StartScreen> {
           ],),
       ),
     );
+  }
+
+  Widget postList(state){
+    try{
+       return ListView.separated(
+          itemBuilder: (BuildContext context, int index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                        value: BlocProvider.of<PostBloc>(context),
+                        child: WorkoutDetailScreen(
+                          workoutPost: state.allPosts[index],
+                        )),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.only(
+                    top: 10.0, bottom: 10.0, left: 10.0, right: 10.0),
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              top: 25.0, left: 15.0, bottom: 10.0),
+                          child: SizedBox(
+                            child: ClipOval(
+                              child: Image(
+                                image: const NetworkImage(
+                                    'https://avatar.iran.liara.run/public/boy?username=Ash'),
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height:
+                                    MediaQuery.of(context).size.width * 0.15,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(
+                                    top: 20.0, bottom: 5.0, right: 15.0),
+                                child: Text(
+                                  state.allPosts[index].location,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(
+                                    top: 5.0, bottom: 5.0, right: 15.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Icon(
+                                      Icons.alarm,
+                                      size: MediaQuery.of(context).size.width *
+                                          0.06,
+                                    ),
+                                    Text(
+                                      state.allPosts[index].duration.toString(),
+                                      style: const TextStyle(fontSize: 16),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(
+                          top: 20.0, bottom: 10.0, left: 15.0),
+                      child: Text(
+                        state.allPosts[index].workout_type,
+                        style: const TextStyle(fontSize: 20),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    SizedBox(
+                      child: Image.network(
+                        state.allPosts[index].photoURL,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        height: MediaQuery.of(context).size.width * 0.6,
+                        fit: BoxFit
+                            .cover,
+                      ),
+                    ),
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(
+                          top: 15.0, bottom: 5.0, left: 15.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.music_note_rounded,
+                            size: MediaQuery.of(context).size.width * 0.05,
+                          ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: Text(
+                              state.allPosts[index].playlist,
+                              style: const TextStyle(fontSize: 16),
+                              textAlign: TextAlign.left,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          separatorBuilder: (BuildContext context, int index) =>
+              const Divider(),
+          itemCount: state.allPosts.length);
+    } catch(e) {
+      print(e);
+      return Container();
+    }
+
   }
 
 }
