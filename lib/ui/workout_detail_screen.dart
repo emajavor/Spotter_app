@@ -79,10 +79,18 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15.0),
                     ),
-                    child: Padding(
-                        padding: const EdgeInsets.only(top: 20.0),
-                        child: Text(
-                            'Exercises:\n ${widget.workoutPost.exercises.toStringWithoutBrackets()}')),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.93,
+                      height: MediaQuery.of(context).size.height * 0.15,
+                      child: Padding(
+                          padding: EdgeInsets.only(
+                              left: MediaQuery.sizeOf(context).width * 0.05,
+                              top: MediaQuery.sizeOf(context).width * 0.05
+                          ),
+                          child: Text(
+                              'Exercises:\n${widget.workoutPost.exercises.toStringWithoutBrackets()}',
+                              style: TextStyle(fontSize: 18))),
+                    ),
                   ),
                   Center(
                     child: Padding(
