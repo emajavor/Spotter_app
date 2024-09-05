@@ -48,7 +48,6 @@ class FetchingFailed extends PostState{
   List<Object> get props => [message];
 }
 
-
 class UpdatedPost extends PostState{
   final Post updatedPost;
 
@@ -81,6 +80,82 @@ class AddedPost extends PostState{
   @override
   List<Object> get props => [addedPost];
 }
+
+class AddedWorkoutType extends PostState{
+  final String addedWorkoutType;
+
+  const AddedWorkoutType(this.addedWorkoutType);
+
+  @override
+  List<Object> get props => [addedWorkoutType];
+}
+
+class EmptyWorkoutType extends PostState{
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddedLocation extends PostState{
+  final String addedLocation;
+
+  const AddedLocation(this.addedLocation);
+
+  @override
+  List<Object> get props => [addedLocation];
+}
+
+class EmptyLocation extends PostState{
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddedPlaylist extends PostState{
+  final String addedPlaylist;
+
+  const AddedPlaylist(this.addedPlaylist);
+
+  @override
+  List<Object> get props => [addedPlaylist];
+}
+
+class EmptyPlaylist extends PostState{
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddedExercises extends PostState{
+  final List<String> addedExercises;
+
+  const AddedExercises(this.addedExercises);
+
+  @override
+  List<Object> get props => [addedExercises];
+}
+
+class EmptyExercises extends PostState{
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddedImage extends PostState{
+  final XFile addedImage;
+
+  const AddedImage(this.addedImage);
+
+  @override
+  List<Object> get props => [addedImage];
+}
+
+class EmptyImage extends PostState{
+
+  @override
+  List<Object> get props => [];
+}
+
 class FailedAddedPost  extends PostState{
   final String message;
 
@@ -96,6 +171,45 @@ class AddingPost extends PostState{
   List<Object> get props => [];
 }
 
+class AddingExercise extends PostState {
+
+  const AddingExercise();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddingWorkoutType extends PostState {
+
+  const AddingWorkoutType();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddingLocation extends PostState {
+
+  const AddingLocation();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddingPlaylist extends PostState {
+
+  const AddingPlaylist();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddingImage extends PostState {
+
+  const AddingImage();
+
+  @override
+  List<Object> get props => [];
+}
 
 //TODO create failed fetching state with error message attribute
 
