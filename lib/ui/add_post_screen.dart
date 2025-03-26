@@ -640,7 +640,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         return Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Image.file(
-                            File(pickedFile.toString()+),
+                            File(pickedFile.toString()),
                             height: 200,
                             width: double.infinity,
                             fit: BoxFit.cover,

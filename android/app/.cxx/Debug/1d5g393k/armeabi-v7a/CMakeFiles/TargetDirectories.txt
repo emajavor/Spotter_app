@@ -1,0 +1,2 @@
+D:/Spotter_app/android/app/.cxx/Debug/1d5g393k/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Spotter_app/android/app/.cxx/Debug/1d5g393k/armeabi-v7a/CMakeFiles/rebuild_cache.dir

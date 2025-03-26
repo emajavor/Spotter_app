@@ -107,22 +107,23 @@ class _StartScreenState extends State<StartScreen> {
                         Padding(
                           padding: const EdgeInsets.only(
                               top: 25.0, left: 15.0, bottom: 10.0),
-                          child: SizedBox(
-                            child: ClipOval(
-                              child: Image(
-                                image: const NetworkImage(
-                                    'https://avatar.iran.liara.run/public/boy?username=Ash'),
-                                width: MediaQuery.of(context).size.width * 0.15,
-                                height:
-                                    MediaQuery.of(context).size.width * 0.15,
-                                fit: BoxFit.cover,
-                              ),
+                          child: ClipOval(
+                            child: Image(
+                              image: const NetworkImage(
+                                  'https://avatar.iran.liara.run/public/boy?username=Ash'),
+                              width: MediaQuery.of(context).size.width * 0.15,
+                              height:
+                                  MediaQuery.of(context).size.width * 0.15,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.error, size: 50);
+                              } // shows icon if image cant be shown
                             ),
                           ),
                         ),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Container(
@@ -136,10 +137,11 @@ class _StartScreenState extends State<StartScreen> {
                                     fontSize: 16,
                                   ),
                                   textAlign: TextAlign.right,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
-                              Container(
-                                alignment: Alignment.centerRight,
+                              Padding(
                                 padding: const EdgeInsets.only(
                                     top: 5.0, bottom: 5.0, right: 15.0),
                                 child: Row(
@@ -147,13 +149,16 @@ class _StartScreenState extends State<StartScreen> {
                                   children: [
                                     Icon(
                                       Icons.alarm,
-                                      size: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      size: MediaQuery.of(context).size.width * 0.06,
                                     ),
-                                    Text(
-                                      state.allPosts[index].duration.toString(),
-                                      style: const TextStyle(fontSize: 16),
-                                      textAlign: TextAlign.right,
+                                    SizedBox(
+                                      child: Text(
+                                        state.allPosts[index].duration.toString() ?? "N/A",
+                                        style: const TextStyle(fontSize: 16),
+                                        textAlign: TextAlign.right,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
                                     ),
                                   ],
                                 ),
