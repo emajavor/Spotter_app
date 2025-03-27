@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
-import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/ui/start_screen.dart';
 import 'firebase_options.dart';
-import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 
@@ -30,7 +28,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.dark,
+        ),
+        textTheme: TextTheme(
+          displayLarge: const TextStyle(
+            fontSize: 72,
+            fontWeight: FontWeight.bold,
+          ),
+          // ···
+          titleLarge: GoogleFonts.montserrat(
+            fontSize: 25,
+            fontStyle: FontStyle.normal,
+          ),
+          bodyMedium: GoogleFonts.montserrat(),
+          displaySmall: GoogleFonts.montserrat(),
+        ),
       ),
       home: BlocProvider(
           create: (BuildContext context) => PostBloc(),

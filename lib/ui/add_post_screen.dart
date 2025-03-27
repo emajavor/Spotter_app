@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/models/post.dart';
@@ -10,15 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
 import '../bloc/post/post_bloc.dart';
-import '../bloc/post/post_bloc.dart';
-import '../bloc/post/post_bloc.dart';
-import '../bloc/post/post_bloc.dart';
-import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 
 class AddPostScreen extends StatefulWidget {
-  AddPostScreen();
+  const AddPostScreen({super.key});
 
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
@@ -26,7 +20,7 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
@@ -155,7 +149,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Post'),
+        title: const Text('Add Post'),
       ),
       body: // BlocBuilder<PostBloc, PostState>(
           // bloc: BlocProvider.of<PostBloc>(context),
@@ -208,7 +202,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     },
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                     child: TextField(
                       controller: exerciseController,
                       decoration: const InputDecoration(
@@ -219,7 +213,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ),
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 15.0),
+                      padding: const EdgeInsets.only(bottom: 15.0),
                       child: ElevatedButton(
                         onPressed: () {
 
@@ -231,7 +225,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           exerciseController.clear();
                         },
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(Colors.deepPurple),
+                          backgroundColor: WidgetStateProperty.all<Color>(Colors.deepPurple),
                         ),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
@@ -276,7 +270,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 20.0, vertical: 15.0),
                               child: Text(
                                 _newWorkoutType = workoutTypeController.text,
@@ -284,12 +278,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: editWorkoutTypeTextField,
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -310,7 +304,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         return Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 16),
                               child: TextField(
                                 controller: workoutTypeController,
@@ -322,7 +316,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     _newWorkoutType =
@@ -335,7 +329,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   },
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -387,7 +381,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 20.0, vertical: 15.0),
                               child: Text(
                                 _newLocation = locationController.text,
@@ -395,12 +389,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: editLocationTextField,
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -421,7 +415,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         return Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 16),
                               child: TextField(
                                 controller: locationController,
@@ -433,7 +427,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     _newLocation = locationController.text;
@@ -445,7 +439,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   },
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -498,7 +492,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           children: [
                             InkWell(
                               child: Padding(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                     horizontal: 20.0, vertical: 15.0),
                                 child: Text(
                                   _newPlaylist = playlistController.text,
@@ -509,12 +503,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: editPlaylistTextField,
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -535,7 +529,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         return Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 16),
                               child: TextField(
                                 controller: playlistController,
@@ -547,7 +541,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                             Center(
                               child: Padding(
-                                padding: EdgeInsets.only(bottom: 15.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
                                     _newPlaylist = playlistController.text;
@@ -559,7 +553,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   },
                                   style: ButtonStyle(
                                     backgroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                             Colors.deepPurple),
                                   ),
                                   child: const Padding(
@@ -593,7 +587,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Easy'),
+                              const Text('Easy'),
                               Radio<Intensity>(
                                 value: Intensity.Easy,
                                 groupValue: selectedIntensity,
@@ -653,7 +647,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ),
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20.0),
+                      padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: ElevatedButton(
                         onPressed: () {
                           pickedFile = _picker.pickImage(source: ImageSource.gallery) as XFile?;
@@ -663,7 +657,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           final storageRef = FirebaseStorage.instance.ref();
                       },
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(Colors.deepPurple),
+                          backgroundColor: WidgetStateProperty.all<Color>(Colors.deepPurple),
                         ),
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
@@ -765,12 +759,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
             //       ),
             Center(
               child: Padding(
-                padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                padding: const EdgeInsets.only(top: 15.0, bottom: 15.0),
                 child: ElevatedButton(
                   onPressed: addPost,
                   style: ButtonStyle(
                     backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.teal),
+                        WidgetStateProperty.all<Color>(Colors.teal),
                   ),
                   child: const Padding(
                     padding:

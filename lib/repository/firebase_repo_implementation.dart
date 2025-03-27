@@ -1,12 +1,9 @@
-import 'dart:convert';
-import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:spotter_app/repository/firebase_repo_interface.dart';
 
 import '../models/post.dart';
-import 'package:http/http.dart' as http;
 
 
 

@@ -1,9 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
-import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/ui/add_post_screen.dart';
 import 'package:spotter_app/ui/workout_detail_screen.dart';
@@ -31,7 +28,7 @@ class _StartScreenState extends State<StartScreen> {
           (MaterialPageRoute(
           builder: (_) => BlocProvider.value(
               value: BlocProvider.of<PostBloc>(context),
-              child: AddPostScreen() ),
+              child: const AddPostScreen() ),
         ),
         );
       },
@@ -99,7 +96,6 @@ class _StartScreenState extends State<StartScreen> {
               child: Container(
                 padding: const EdgeInsets.only(
                     top: 10.0, bottom: 10.0, left: 10.0, right: 10.0),
-                color: Colors.white,
                 child: Column(
                   children: [
                     Row(

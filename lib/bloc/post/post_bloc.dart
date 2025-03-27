@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -15,7 +14,7 @@ part 'post_state.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
   final FirebaseRepo _firebaseRepo = FirebaseRepo();
-  List<String> _exercises = [];
+  final List<String> _exercises = [];
   String _workoutType = "";
   String _location = "";
   String _playlist = "";
@@ -33,7 +32,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   FutureOr <void> _onAddWorkoutType(AddWorkoutType event, Emitter<PostState> emit)  {
-    emit(AddingWorkoutType());
+    emit(const AddingWorkoutType());
     _workoutType = event.addedWorkoutType;
     if(_workoutType.isEmpty){
       emit(EmptyWorkoutType());
@@ -44,7 +43,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   FutureOr <void> _onAddLocation(AddLocation event, Emitter<PostState> emit)  {
-    emit(AddingLocation());
+    emit(const AddingLocation());
     _location = event.addedLocation;
     print("LOCATION: ${event.addedLocation}");
     if(_location.isEmpty){
@@ -56,7 +55,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   Future <void> _onAddPlaylist(AddPlaylist event, Emitter<PostState> emit) async {
-    emit(AddingPlaylist());
+    emit(const AddingPlaylist());
     _playlist = event.addedPlaylist;
     if(_playlist.isEmpty){
       emit(EmptyPlaylist());
@@ -69,7 +68,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   FutureOr <void> _onAddExercises(AddExercises event, Emitter<PostState> emit)  {
-    emit(AddingExercise());
+    emit(const AddingExercise());
     _exercises.add(event.addedExercises);
     if(_exercises.isEmpty){
       emit(EmptyExercises());
@@ -80,7 +79,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   FutureOr <void> _onAddImage(AddImage event, Emitter<PostState> emit)  {
-    emit(AddingImage());
+    emit(const AddingImage());
     _image = event.addedImage;
     if(_image != null){
       emit(EmptyImage());
@@ -131,10 +130,10 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       if (post != null) {
         emit(UpdatedPost(post));
       } else {
-        emit(FailedUpdatedPost("No post"));
+        emit(const FailedUpdatedPost("No post"));
       }
     } catch(e) {
-        emit(FailedUpdatedPost("Failed to update Post"));
+        emit(const FailedUpdatedPost("Failed to update Post"));
     }
   }
 }

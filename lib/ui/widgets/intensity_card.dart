@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../models/enums/intensity.dart';
 
@@ -8,7 +7,7 @@ class IntensityCard extends StatelessWidget {
   final String text;
   final Intensity? intensity;
 
-  const IntensityCard({this.text = '', this.intensity});
+  const IntensityCard({super.key, this.text = '', this.intensity});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +23,9 @@ class IntensityCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(text, style: TextStyle(fontSize: 18)),
+              Text(text, style: const TextStyle(fontSize: 18)),
               if (intensity != null) ...[
-                Text('Intensity: ${intensity!.description}', style: TextStyle(fontSize: 18)),
+                Text('Intensity: ${intensity!.description}', style: const TextStyle(fontSize: 18)),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                 Row(
                   children: _buildIntensityBars(intensity!),
@@ -61,7 +60,7 @@ class IntensityCard extends StatelessWidget {
 
     return colors
         .map((color) => Container(
-      margin: EdgeInsets.symmetric(horizontal: 3.0),
+      margin: const EdgeInsets.symmetric(horizontal: 3.0),
       width: 30,
       height: 10,
       color: color,

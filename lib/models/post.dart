@@ -1,6 +1,4 @@
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 
 class Post {

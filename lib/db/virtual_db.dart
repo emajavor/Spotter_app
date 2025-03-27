@@ -1,7 +1,7 @@
 import 'dart:math';
 
 class VirtualDB {
-  List<Map<String, dynamic>> _items = [];
+  final List<Map<String, dynamic>> _items = [];
   static final VirtualDB _db = VirtualDB._privateConstructor();
 
   VirtualDB._privateConstructor();
@@ -25,7 +25,7 @@ class VirtualDB {
   }
 
   Future<List<Map<String, dynamic>>> list() async {
-    await Future.delayed(Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 800));
     return _items;
   }
 

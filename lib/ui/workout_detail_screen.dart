@@ -89,7 +89,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                           ),
                           child: Text(
                               'Exercises:\n${widget.workoutPost.exercises.toStringWithoutBrackets()}',
-                              style: TextStyle(fontSize: 18))),
+                              style: const TextStyle(fontSize: 18))),
                     ),
                   ),
                   Center(
