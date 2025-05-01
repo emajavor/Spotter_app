@@ -78,14 +78,14 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     }
   }
 
-  FutureOr <void> _onAddImage(AddImage event, Emitter<PostState> emit)  {
+  FutureOr<void> _onAddImage(AddImage event, Emitter<PostState> emit)  {
     emit(const AddingImage());
     _image = event.addedImage;
     if(_image != null){
-      emit(EmptyImage());
+      emit(AddedImage(_image!));
     }
     else {
-      emit(AddedImage(_image!));
+      emit(EmptyImage());
     }
   }
 

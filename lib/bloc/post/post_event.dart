@@ -52,12 +52,12 @@ class AddPlaylist extends PostEvent{
 }
 
 class AddImage extends PostEvent{
-  final XFile addedImage;
+  final XFile? addedImage; //nullable za kasnije ako budem dodavala gumb za brisanje
 
-  const AddImage({required this.addedImage});
+  const AddImage({this.addedImage});
 
   @override
-  List<Object> get props => [addedImage];
+  List<Object?> get props => [addedImage];
 }
 
 class UpdatePost extends PostEvent{
