@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/bloc/auth/auth_bloc.dart';
 import 'package:spotter_app/theme.dart';
-import 'package:spotter_app/ui/start_screen.dart';
+import 'package:spotter_app/ui/home_screen.dart';
+import 'package:spotter_app/ui/feed_screen.dart';
 import 'package:spotter_app/ui/auth_screen.dart';
 import 'firebase_options.dart';
 
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/auth',
         routes: {
           '/auth': (context) => const AuthScreen(),
-          '/start': (context) => const StartScreen(),
+          '/start': (context) => const HomeScreen(),
         },
       ),
     );

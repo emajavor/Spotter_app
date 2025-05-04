@@ -114,9 +114,92 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   void addPhoto() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);//returns Future<XFile?> and we wait for the result
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                'Choose Image',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(
+                Icons.close,
+                color: Theme.of(context).colorScheme.onSecondary,
+              ),
+            ),
+          ],
+        ),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, 'camera');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                minimumSize: const Size(80, 80),
+              ),
+              child: const Icon(
+                Icons.camera_alt,
+                size: 30,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, 'gallery');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                minimumSize: const Size(80, 80),
+              ),
+              child: const Icon(
+                Icons.image_search_rounded,
+                size: 30,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    PermissionStatus permissionStatus;
+    ImageSource source;
+    if (result == 'camera') {
+      permissionStatus = await Permission.camera.request();
+      source = ImageSource.camera;
+    } else if (result == 'gallery') {
+      permissionStatus = await Permission.photos.request();
+      source = ImageSource.gallery;
+    } else {
+      return;
+    }
+
+    if (permissionStatus.isGranted) {
+      final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
         setState(() {
           _image = pickedFile;
@@ -128,7 +211,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Storage permission denied',
+            result == 'camera' ? 'Camera permission denied' : 'Photo permission denied',
             style: GoogleFonts.poppins(),
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
@@ -196,7 +279,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   BlocBuilder<PostBloc, PostState>(
                     bloc: BlocProvider.of<PostBloc>(context),
                     buildWhen: (prev, curr) =>
-                    curr is AddedExercises || curr is EmptyExercises || curr is AddingExercise,
+                        curr is AddedExercises ||
+                        curr is EmptyExercises ||
+                        curr is AddingExercise,
                     builder: (context, state) {
                       print("state in AddedScreen is $state");
                       if (state is AddedExercises) {
@@ -210,7 +295,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           //   );
                           // }).toList(),
                           children: [
-                            Text(state.addedExercises.toStringWithoutBrackets()),
+                            Text(
+                                state.addedExercises.toStringWithoutBrackets()),
                           ],
                         );
                       } else {
@@ -219,7 +305,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     },
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                     child: TextField(
                       controller: exerciseController,
                       decoration: InputDecoration(
@@ -232,7 +319,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                      style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                      style: GoogleFonts.poppins(
+                          color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ),
                   Center(
@@ -248,15 +336,18 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           exerciseController.clear();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: Text(
                           'ADD EXERCISE',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                          style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600, fontSize: 15),
                         ),
                       ),
                     ),
@@ -273,7 +364,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Padding(
+                  Padding(
                     padding: const EdgeInsets.only(top: 20, left: 10),
                     child: Text(
                       'Workout type:',
@@ -287,11 +378,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   BlocBuilder<PostBloc, PostState>(
                     bloc: BlocProvider.of<PostBloc>(context),
                     buildWhen: (prev, curr) =>
-                        curr is AddedWorkoutType || curr is AddingWorkoutType || curr is EmptyWorkoutType,
+                        curr is AddedWorkoutType ||
+                        curr is AddingWorkoutType ||
+                        curr is EmptyWorkoutType,
                     builder: (context, state) {
                       print("state in AddedScreen is $state");
                       if (state is AddedWorkoutType) {
-                        _newWorkoutType = state.addedWorkoutType; // Spremi vrijednost iz Bloca
+                        _newWorkoutType = state
+                            .addedWorkoutType; // Spremi vrijednost iz Bloca
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -302,7 +396,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 _newWorkoutType ?? '',
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -311,20 +406,30 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    workoutTypeController.text = _newWorkoutType ?? ''; // Postavi spremljenu vrijednost u TextField
-                                    context.read<PostBloc>().add(const AddWorkoutType(addedWorkoutType: '')); // Resetiraj za edit
+                                    workoutTypeController.text = _newWorkoutType ??
+                                        ''; // Postavi spremljenu vrijednost u TextField
+                                    context.read<PostBloc>().add(
+                                        const AddWorkoutType(
+                                            addedWorkoutType:
+                                                '')); // Resetiraj za edit
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.secondary,
+                                    foregroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
                                   child: Text(
                                     'EDIT',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -346,10 +451,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   hintText: 'Enter a workout type',
                                   prefixIcon: Icon(
                                     Icons.fitness_center,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
-                                style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                                style: GoogleFonts.poppins(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                             ),
                             Center(
@@ -357,27 +466,37 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    _newWorkoutType = workoutTypeController.text.trim();
+                                    _newWorkoutType =
+                                        workoutTypeController.text.trim();
                                     if (_newWorkoutType?.isNotEmpty ?? false) {
                                       context.read<PostBloc>().add(
-                                        AddWorkoutType(addedWorkoutType: _newWorkoutType!),
-                                      );
+                                            AddWorkoutType(
+                                                addedWorkoutType:
+                                                    _newWorkoutType!),
+                                          );
                                       workoutTypeController.clear();
                                     } else {
-                                      context.read<PostBloc>().add(const AddWorkoutType(addedWorkoutType: ''));
+                                      context.read<PostBloc>().add(
+                                          const AddWorkoutType(
+                                              addedWorkoutType: ''));
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
                                   child: Text(
                                     'SAVE',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -413,11 +532,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   BlocBuilder<PostBloc, PostState>(
                     bloc: BlocProvider.of<PostBloc>(context),
                     buildWhen: (prev, curr) =>
-                        curr is AddedLocation || curr is AddingLocation || curr is EmptyLocation,
+                        curr is AddedLocation ||
+                        curr is AddingLocation ||
+                        curr is EmptyLocation,
                     builder: (context, state) {
                       print("state in AddedScreen is $state");
                       if (state is AddedLocation) {
-                        _newLocation = state.addedLocation; // Spremi vrijednost iz Bloca
+                        _newLocation =
+                            state.addedLocation; // Spremi vrijednost iz Bloca
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -426,27 +548,39 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   horizontal: 20.0, vertical: 15.0),
                               child: Text(
                                 _newLocation ?? '',
-                                style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                                style: GoogleFonts.poppins(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                             ),
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
-                                  onPressed: (){
-                                    context.read<PostBloc>().add(const AddLocation(addedLocation: '')); // Resetiraj za edit
+                                  onPressed: () {
+                                    context.read<PostBloc>().add(
+                                        const AddLocation(
+                                            addedLocation:
+                                                '')); // Resetiraj za edit
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.secondary,
+                                    foregroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
                                   child: Text(
                                     'EDIT',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -461,17 +595,21 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   horizontal: 8, vertical: 16),
                               child: TextField(
                                 controller: locationController,
-                                decoration:  InputDecoration(
+                                decoration: InputDecoration(
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   hintText: 'Enter your location',
                                   prefixIcon: Icon(
                                     Icons.location_on,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
-                                style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                                style: GoogleFonts.poppins(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                             ),
                             Center(
@@ -481,20 +619,26 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   onPressed: () {
                                     _newLocation = locationController.text;
                                     if (_newLocation?.isNotEmpty ?? false) {
-                                      context.read<PostBloc>().add(AddLocation(addedLocation: _newLocation!));
+                                      context.read<PostBloc>().add(AddLocation(
+                                          addedLocation: _newLocation!));
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
                                   child: Text(
                                     'SAVE',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -530,11 +674,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   BlocBuilder<PostBloc, PostState>(
                     bloc: BlocProvider.of<PostBloc>(context),
                     buildWhen: (prev, curr) =>
-                        curr is AddedPlaylist || curr is AddingPlaylist || curr is EmptyPlaylist,
+                        curr is AddedPlaylist ||
+                        curr is AddingPlaylist ||
+                        curr is EmptyPlaylist,
                     builder: (context, state) {
                       print("state in AddedScreen is $state");
                       if (state is AddedPlaylist) {
-                        _newPlaylist = state.addedPlaylist; // Spremi vrijednost iz Bloca
+                        _newPlaylist =
+                            state.addedPlaylist; // Spremi vrijednost iz Bloca
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -545,7 +692,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 child: Text(
                                   _newPlaylist ?? '',
                                   style: GoogleFonts.poppins(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -562,18 +710,28 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 padding: const EdgeInsets.only(bottom: 15.0),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    context.read<PostBloc>().add(const AddPlaylist(addedPlaylist: '')); // Resetiraj za edit
+                                    context.read<PostBloc>().add(
+                                        const AddPlaylist(
+                                            addedPlaylist:
+                                                '')); // Resetiraj za edit
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.secondary,
+                                    foregroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
-                                  child: Text('EDIT',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                  child: Text(
+                                    'EDIT',
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -595,10 +753,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   hintText: 'Paste your playlist link',
                                   prefixIcon: Icon(
                                     Icons.music_note,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
-                                style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                                style: GoogleFonts.poppins(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface),
                               ),
                             ),
                             Center(
@@ -608,19 +770,26 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   onPressed: () {
                                     _newPlaylist = playlistController.text;
                                     if (_newPlaylist?.isNotEmpty ?? false) {
-                                      context.read<PostBloc>().add(AddPlaylist(addedPlaylist: _newPlaylist!));
+                                      context.read<PostBloc>().add(AddPlaylist(
+                                          addedPlaylist: _newPlaylist!));
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20.0, vertical: 15.0),
                                   ),
-                                  child: Text('SAVE',
-                                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15),
+                                  child: Text(
+                                    'SAVE',
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -633,64 +802,66 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 ],
               ),
             ),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    color: Theme.of(context).colorScheme.surface,
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Easy',
-                                style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
-                              ),
-                              Radio<Intensity>(
-                                value: Intensity.Easy,
-                                groupValue: selectedIntensity,
-                                onChanged: (Intensity? value) {
-                                  setState(() {
-                                    selectedIntensity = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          _buildIntensityItem(Intensity.Intermediate),
-                          _buildIntensityItem(Intensity.Hard),
-
-                        ],
-                      ),
-                    ),
-                  ),
             Card(
               shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              color: Theme.of(context).colorScheme.surface,
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Easy',
+                          style: GoogleFonts.poppins(
+                              color: Theme.of(context).colorScheme.onSurface),
+                        ),
+                        Radio<Intensity>(
+                          value: Intensity.Easy,
+                          groupValue: selectedIntensity,
+                          onChanged: (Intensity? value) {
+                            setState(() {
+                              selectedIntensity = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    _buildIntensityItem(Intensity.Intermediate),
+                    _buildIntensityItem(Intensity.Hard),
+                  ],
+                ),
+              ),
+            ),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                          textAlign: TextAlign.left,
-                          'Add photo:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20, left: 10),
+                    child: Text(
+                      textAlign: TextAlign.left,
+                      'Add photo:',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
+                    ),
                   ),
                   BlocBuilder<PostBloc, PostState>(
                     bloc: BlocProvider.of<PostBloc>(context),
                     buildWhen: (prev, curr) =>
-                    curr is AddedImage || curr is EmptyImage || curr is AddingImage,
+                        curr is AddedImage ||
+                        curr is EmptyImage ||
+                        curr is AddingImage,
                     builder: (context, state) {
                       print("state in AddedScreen is $state");
                       if (state is AddedImage && _image != null) {
@@ -710,7 +881,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   child: Center(
                                     child: Icon(
                                       Icons.broken_image,
-                                      color: Theme.of(context).colorScheme.error,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
                                     ),
                                   ),
                                 );
@@ -725,7 +897,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         child: Center(
                           child: Text(
                             'No image selected',
-                            style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+                            style: GoogleFonts.poppins(
+                                color: Theme.of(context).colorScheme.onSurface),
                           ),
                         ),
                       );
@@ -737,25 +910,30 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       child: ElevatedButton(
                         onPressed: addPhoto,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                            side: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0, vertical: 15.0),
                         ),
                         child: Text(
                           'CHOOSE PHOTO',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          style:
+                              GoogleFonts.poppins(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
                   ),
-
-                      ],
-                    ),
-                  ),
+                ],
+              ),
+            ),
             //       Card(
             //         shape: RoundedRectangleBorder(
             //           borderRadius: BorderRadius.circular(15.0),
@@ -848,9 +1026,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   child: const Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                    child: Text(
-                      'ADD POST'
-                    ),
+                    child: Text('ADD POST'),
                   ),
                 ),
               ),
@@ -867,7 +1043,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
       children: [
         Text(
           intensity.description,
-          style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).colorScheme.onSurface),
         ),
         Radio<Intensity>(
           value: intensity,
@@ -883,7 +1060,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
     );
   }
 
-  void addPost() async { //addPost je sada async jer čeka upload slike.
+  void addPost() async {
+    //addPost je sada async jer čeka upload slike.
     if (workoutTypeController.text.isEmpty ||
         locationController.text.isEmpty ||
         _exercisesList.isEmpty) {
@@ -910,8 +1088,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
         playlist: playlistController.text,
         workout_type: workoutTypeController.text,
         intensity: selectedIntensity ?? Intensity.Easy,
-        exercises: _exercisesList
-    );
+        exercises: _exercisesList);
 
     context.read<PostBloc>().add(AddPost(addedPost: post));
     ScaffoldMessenger.of(context).showSnackBar(

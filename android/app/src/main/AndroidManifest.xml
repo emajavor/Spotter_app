@@ -2,8 +2,10 @@
     package="com.javor.spotter_app">
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA"/>
-   <application
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <application
         android:label="spotter_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

@@ -7,14 +7,14 @@ import 'package:spotter_app/ui/workout_detail_screen.dart';
 
 import '../bloc/auth/auth_bloc.dart';
 
-class StartScreen extends StatefulWidget {
-  const StartScreen({super.key});
+class FeedScreen extends StatefulWidget {
+  const FeedScreen({super.key});
 
   @override
-  State<StartScreen> createState() => _StartScreenState();
+  State<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _StartScreenState extends State<StartScreen> {
+class _FeedScreenState extends State<FeedScreen> {
   @override
   void initState() {
     BlocProvider.of<PostBloc>(context).add(const GetPosts());
@@ -24,20 +24,6 @@ class _StartScreenState extends State<StartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => BlocProvider.value(
-                  value: BlocProvider.of<PostBloc>(context),
-                  child: const AddPostScreen()),
-            ),
-          );
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        child: const Icon(Icons.add),
-      ),
       appBar: AppBar(
         title: Text(
           'Your Workouts',
@@ -58,7 +44,7 @@ class _StartScreenState extends State<StartScreen> {
           buildWhen: (prev, curr) =>
               curr is FetchedPosts || curr is FetchingPosts,
           builder: (context, state) {
-            print("State in StartScreen is: $state");
+            print("State in FeedScreen is: $state");
             if (state is FetchedPosts) {
               return postList(state);
             } else if (state is FetchingPosts) {
