@@ -25,10 +25,42 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddPlaylist>(_onAddPlaylist);
     on<AddExercises>(_onAddExercises);
     on<AddImage>(_onAddImage);
-    //on<AddPost>(_onAddPost);
+    on<AddPost>(_onAddPost);
     on<UpdatePost>(_onUpdatePost);
     on<GetPosts>(_onGetPosts);
     on<GetPost>(_onGetPost);
+  }
+
+  Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
+    emit(const AddingPost());
+    try {
+      String? photoURL;
+      if (_image != null) {
+        photoURL = await _firebaseRepo.uploadImage(_image!);
+      }
+
+      final post = Post(
+        id: event.addedPost.id,
+        duration: event.addedPost.duration,
+        location: _location.isNotEmpty ? _location : event.addedPost.location,
+        photoURL: photoURL ?? event.addedPost.photoURL,
+        playlist: _playlist.isNotEmpty ? _playlist : event.addedPost.playlist,
+        workout_type: _workoutType.isNotEmpty ? _workoutType : event.addedPost.workout_type,
+        intensity: event.addedPost.intensity,
+        exercises: _exercises.isNotEmpty ? _exercises : event.addedPost.exercises,
+      );
+
+      await _firebaseRepo.addPost(post);
+      emit(AddedPost(post));
+
+      _exercises.clear();
+      _workoutType = "";
+      _location = "";
+      _playlist = "";
+      _image = null;
+    } catch (e) {
+      emit(FailedAddedPost(e.toString()));
+    }
   }
 
   FutureOr <void> _onAddWorkoutType(AddWorkoutType event, Emitter<PostState> emit)  {

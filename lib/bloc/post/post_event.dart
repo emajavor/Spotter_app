@@ -5,7 +5,7 @@ class PostEvent extends Equatable {
 
   @override
   // TODO: implement props
-  List<Object?> get props => throw UnimplementedError();
+  List<Object?> get props => [];
 }
 class AddPost extends PostEvent{
   final Post addedPost;
@@ -90,5 +90,5 @@ class GetPost extends PostEvent{
   });
 
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [id, intensity];
 }

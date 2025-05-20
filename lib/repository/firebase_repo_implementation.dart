@@ -1,6 +1,9 @@
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:spotter_app/repository/firebase_repo_interface.dart';
 
 import '../models/post.dart';
@@ -80,5 +83,16 @@ class FirebaseRepo implements IFirebaseRepo {
 
     db.collection("posts").add(post.toMap()).then((documentSnapshot) =>
         print("Added Data with ID: ${documentSnapshot.id}"));
+  }
+  Future<String?> uploadImage(XFile image) async {
+    try {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final reference = db.ref().child("images/$fileName");
+      await reference.putFile(File(image.path));
+      return await reference.getDownloadURL();
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null;
+    }
   }
 }
