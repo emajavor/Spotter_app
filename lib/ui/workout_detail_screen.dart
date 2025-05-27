@@ -88,7 +88,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                               top: MediaQuery.sizeOf(context).width * 0.05
                           ),
                           child: Text(
-                              'Exercises:\n${widget.workoutPost.exercises.toStringWithoutBrackets()}',
+                              'Exercises:\n${widget.workoutPost.exercises?.toStringWithoutBrackets()}',
                               style: const TextStyle(fontSize: 18))),
                     ),
                   ),

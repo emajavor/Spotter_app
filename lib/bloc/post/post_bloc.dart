@@ -13,13 +13,18 @@ part 'post_event.dart';
 part 'post_state.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
-  final FirebaseRepo _firebaseRepo = FirebaseRepo();
+  final FirebaseRepo _firebaseRepo;
   final List<String> _exercises = [];
   String _workoutType = "";
   String _location = "";
   String _playlist = "";
   XFile? _image;
-  PostBloc() : super(const PostState()) {
+
+  String get workoutType => _workoutType;
+  String get location => _location;
+  List<String> get exercises => _exercises;
+
+  PostBloc(this._firebaseRepo) : super(const PostState()) {
     on<AddWorkoutType>(_onAddWorkoutType);
     on<AddLocation>(_onAddLocation);
     on<AddPlaylist>(_onAddPlaylist);
@@ -34,31 +39,16 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
     emit(const AddingPost());
     try {
-      String? photoURL;
-      if (_image != null) {
-        photoURL = await _firebaseRepo.uploadImage(_image!);
-      }
-
-      final post = Post(
-        id: event.addedPost.id,
-        duration: event.addedPost.duration,
-        location: _location.isNotEmpty ? _location : event.addedPost.location,
-        photoURL: photoURL ?? event.addedPost.photoURL,
-        playlist: _playlist.isNotEmpty ? _playlist : event.addedPost.playlist,
-        workout_type: _workoutType.isNotEmpty ? _workoutType : event.addedPost.workout_type,
-        intensity: event.addedPost.intensity,
-        exercises: _exercises.isNotEmpty ? _exercises : event.addedPost.exercises,
-      );
-
-      await _firebaseRepo.addPost(post);
-      emit(AddedPost(post));
-
+      await _firebaseRepo.addPost(event.addedPost);
+      emit(AddedPost(event.addedPost));
       _exercises.clear();
       _workoutType = "";
       _location = "";
       _playlist = "";
       _image = null;
+      emit(const PostInitial());
     } catch (e) {
+      print("Error in AddPost: $e");
       emit(FailedAddedPost(e.toString()));
     }
   }
@@ -121,16 +111,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     }
   }
 
-  // Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
-  //   Post addedPost = Post(id: id, duration: duration, location: location, photoURL: photoURL, playlist: playlist, workout_type: _workoutType, intensity: intensity, exercises: exercises)
-  //
-  //   try {
-  //       await _firebaseRepo.addPost(addedPost);
-  //     } catch(e) {
-  //       print("error za addedpost $e");
-  //       emit(FailedAddedPost(e.toString()));
-  //     }
-  // }
   void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
     print('Updating post with id: ${event.id} to intensity: ${event.newIntensity}');
       try {

@@ -17,8 +17,7 @@ class PostInitial extends PostState {
 
 class FetchingPosts extends PostState {
 
-  @override
-  List<Object> get props => [];
+  const FetchingPosts();
 }
 
 class FetchedPosts extends PostState{
@@ -40,12 +39,12 @@ class FetchedPost extends PostState{
   List<Object> get props => [fetchedPost];
 }
 class FetchingFailed extends PostState{
-  final String message;
+  final String error;
 
-  const FetchingFailed(this.message);
+  const FetchingFailed(this.error);
 
    @override
-  List<Object> get props => [message];
+  List<Object> get props => [error];
 }
 
 class UpdatedPost extends PostState{
@@ -73,12 +72,12 @@ class UpdatingPost extends PostState{
 }
 
 class AddedPost extends PostState{
-  final Post addedPost;
+  final Post? addedPost;
 
-  const AddedPost(this.addedPost);
+  const AddedPost([this.addedPost]);
 
   @override
-  List<Object> get props => [addedPost];
+  List<Object?> get props => [addedPost];
 }
 
 class AddedWorkoutType extends PostState{
@@ -107,8 +106,7 @@ class AddedLocation extends PostState{
 
 class EmptyLocation extends PostState{
 
-  @override
-  List<Object> get props => [];
+  const EmptyLocation();
 }
 
 class AddedPlaylist extends PostState{
@@ -122,8 +120,7 @@ class AddedPlaylist extends PostState{
 
 class EmptyPlaylist extends PostState{
 
-  @override
-  List<Object> get props => [];
+  const EmptyPlaylist();
 }
 
 class AddedExercises extends PostState{
@@ -152,23 +149,21 @@ class AddedImage extends PostState{
 
 class EmptyImage extends PostState{
 
-  @override
-  List<Object> get props => [];
+  const EmptyImage();
 }
 
 class FailedAddedPost  extends PostState{
-  final String message;
+  final String error;
 
-  const FailedAddedPost(this.message);
+  const FailedAddedPost(this.error);
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [error];
 }
 
 class AddingPost extends PostState{
 
-  @override
-  List<Object> get props => [];
+  const AddingPost();
 }
 
 class AddingExercise extends PostState {

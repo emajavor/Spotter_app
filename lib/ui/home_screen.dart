@@ -1,29 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/ui/add_post_screen.dart';
-import 'package:spotter_app/ui/feed_screen.dart';
-import 'package:spotter_app/ui/workout_detail_screen.dart';
+import 'package:spotter_app/ui/my_profile_screen.dart';
 
-// Placeholder ekran za Feed (za buduću implementaciju prikaza postova)
-class FeedScreen extends StatelessWidget {
-  const FeedScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'Feed - Coming Soon',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-}
+import 'feed_screen.dart';
 
 // Glavni ekran s BottomNavigationBar
 class HomeScreen extends StatefulWidget { //stateful jer cemo mijenjanjem indexa upravljati navigacijom
@@ -40,9 +20,24 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const FeedScreen(),
     const AddPostScreen(),
-    //const ProfileScreen()
+    const MyProfileScreen(),
+    //const SettingsScreen(),
     // Dodaj buduće ekrane ovdje (npr. ProfileScreen, SettingsScreen)
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for initialIndex from route arguments
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args.containsKey('initialIndex')) {
+        setState(() {
+          _currentIndex = args['initialIndex'] as int;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,14 +68,17 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.feed_outlined, size: 28,),
           label: 'Feed',
+            tooltip: 'Scroll through all posts',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline, size: 28),
             label: 'Add Post',
+            tooltip: 'Add a new post',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_2_outlined, size: 28,),
           label: 'Profile',
+            tooltip: 'Check out your own posts',
           ),
         ],
       ),

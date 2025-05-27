@@ -92,3 +92,12 @@ class GetPost extends PostEvent{
   @override
   List<Object> get props => [id, intensity];
 }
+
+class LikePost extends PostEvent {
+  final String postId;
+
+  const LikePost({required this.postId});
+
+  @override
+  List<Object> get props => [postId];
+}

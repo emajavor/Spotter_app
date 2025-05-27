@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/bloc/auth/auth_bloc.dart';
+import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/theme.dart';
 import 'package:spotter_app/ui/home_screen.dart';
-import 'package:spotter_app/ui/feed_screen.dart';
 import 'package:spotter_app/ui/auth_screen.dart';
+import 'package:spotter_app/ui/my_profile_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -15,19 +17,23 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  runApp(const MyApp());
+  final firebaseRepo = FirebaseRepo();
+  //migrateUsers se poziva prije pokretanja aplikacije kako bi se osiguralo da users kolekcija ima username i profilePictureUrl.
+  await firebaseRepo.migrateUsers();
+  runApp(MyApp(firebaseRepo: firebaseRepo));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final FirebaseRepo firebaseRepo;
+  const MyApp({super.key, required this.firebaseRepo});//firebaseRepo se prosljeđuje u MyApp i koristi za kreiranje AuthBloc i PostBloc.
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiProvider(
       providers: [
-        BlocProvider(create: (context) => AuthBloc()),
-        BlocProvider(create: (context) => PostBloc()),
+        Provider<FirebaseRepo>.value(value: firebaseRepo), //FirebaseRepo svim widgetima u aplikaciji
+        BlocProvider(create: (_) => AuthBloc(firebaseRepo)),
+        BlocProvider(create: (_) => PostBloc(firebaseRepo)),
       ],
       child: MaterialApp(
         theme: SpotterTheme.darkTheme, //our flexcolorscheme theme applied
@@ -35,6 +41,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/auth': (context) => const AuthScreen(),
           '/start': (context) => const HomeScreen(),
+          '/profile': (context) => const MyProfileScreen(),
         },
       ),
     );

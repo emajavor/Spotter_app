@@ -50,16 +50,15 @@ class _AuthScreenState extends State<AuthScreen>
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message)
+                content: Text(state.message, style: GoogleFonts.poppins()),
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
         },
         builder: (context, state) {
           if (state is AuthLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
           return SafeArea(
             child: SingleChildScrollView(
@@ -70,85 +69,116 @@ class _AuthScreenState extends State<AuthScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    // Logo ili naslov
                     Text(
                       'SPOTTER',
-                        style: GoogleFonts.poppins(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w600,
-                          color:  Theme.of(context).colorScheme.primary,
-                          //letterSpacing: 2,
-                        )
-                    ),
-                    const SizedBox(height: 40),
-                    // Polje za e-mail
-                    TextField(
-                      controller: emailController,
-                      decoration: const InputDecoration(
-                        hintText: 'Email',
-                        prefixIcon:
-                            const Icon(Icons.email),
+                      style: GoogleFonts.poppins(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
+                    const SizedBox(height: 40),
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        hintText: 'Email',
+                        prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      style: GoogleFonts.poppins(),
+                    ),
                     const SizedBox(height: 16),
-                    // Polje za lozinku
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Password',
-                        prefixIcon:
-                            const Icon(Icons.lock),
+                      decoration: InputDecoration(
+                        hintText: 'Lozinka',
+                        prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      style: GoogleFonts.poppins(),
                     ),
                     const SizedBox(height: 16),
-                    // Polje za username
                     TextField(
                       controller: usernameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Username (for sign up)',
-                        prefixIcon:
-                            const Icon(Icons.person),
+                      decoration: InputDecoration(
+                        hintText: 'Korisničko ime (obavezno za registraciju)',
+                        prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      style: GoogleFonts.poppins(),
                     ),
                     const SizedBox(height: 24),
-                    // Gumb za Sign In
                     ElevatedButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(
-                              SignInWithEmail(
-                                email: emailController.text,
-                                password: passwordController.text,
-                              ),
-                            );
+                          SignInWithEmail(
+                            email: emailController.text.trim(),
+                            password: passwordController.text,
+                          ),
+                        );
                       },
-                      child: const Text('Sign In'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: Text('Prijavi se', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 16),
-                    // Gumb za Sign Up
-                   ElevatedButton(
+                    ElevatedButton(
                       onPressed: () {
+                        if (usernameController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Korisničko ime je obavezno za registraciju!',
+                                  style: GoogleFonts.poppins()),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                          return;
+                        }
                         context.read<AuthBloc>().add(
-                              SignUpWithEmail(
-                                email: emailController.text,
-                                password: passwordController.text,
-                                username: usernameController.text,
-                              ),
-                            );
+                          SignUpWithEmail(
+                            email: emailController.text.trim(),
+                            password: passwordController.text,
+                            username: usernameController.text.trim(),
+                          ),
+                        );
                       },
-                     child: const Text('Sign up'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: Text('Registriraj se', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 16),
-                    // Gumb za Google Sign-In
                     ElevatedButton.icon(
                       onPressed: () {
                         context.read<AuthBloc>().add(SignInWithGoogle());
                       },
-                      icon: const Icon(Icons.g_mobiledata),
-                      label: const Text('Sign In with Google'),
+                      icon: Icon(Icons.g_mobiledata, color: Theme.of(context).colorScheme.onSecondary),
+                      label: Text('Prijavi se s Googleom', style: GoogleFonts.poppins()),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.secondary,
                         foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
                     ),
                     const SizedBox(height: 20),
