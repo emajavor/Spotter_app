@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/bloc/auth/auth_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<FirebaseRepo>.value(value: firebaseRepo), //FirebaseRepo svim widgetima u aplikaciji
+        Provider<FirebaseRepo>.value(value: firebaseRepo),
         BlocProvider(create: (_) => AuthBloc(firebaseRepo)),
         BlocProvider(create: (_) => PostBloc(firebaseRepo)),
       ],

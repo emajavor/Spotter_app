@@ -5,7 +5,7 @@ import 'package:spotter_app/ui/my_profile_screen.dart';
 
 import 'feed_screen.dart';
 
-// Glavni ekran s BottomNavigationBar
+// Main screen with BottomNavigationBar
 class HomeScreen extends StatefulWidget { //stateful jer cemo mijenjanjem indexa upravljati navigacijom
   const HomeScreen({super.key});
 
@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget { //stateful jer cemo mijenjanjem indexa
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0; // Praćenje trenutno odabranog ekrana
+  int _currentIndex = 0;
 
   // Lista ekrana za navigaciju
   final List<Widget> _screens = [
@@ -22,7 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const AddPostScreen(),
     const MyProfileScreen(),
     //const SettingsScreen(),
-    // Dodaj buduće ekrane ovdje (npr. ProfileScreen, SettingsScreen)
   ];
 
   @override

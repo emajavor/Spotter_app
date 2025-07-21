@@ -1,6 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 
+class Comment {
+  final String userId;
+  final String username;
+  final String text;
+  final Timestamp timestamp;
+
+  Comment({
+    required this.userId,
+    required this.username,
+    required this.text,
+    required this.timestamp,
+  });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      userId: json['userId'] as String? ?? '',
+      username: json['username'] as String? ?? 'Unknown User',
+      text: json['text'] as String? ?? '',
+      timestamp: json['timestamp'] as Timestamp? ?? Timestamp.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'username': username,
+      'text': text,
+      'timestamp': timestamp,
+    };
+  }
+}
+
 class Post {
   final String id;
   final DateTime? duration;
@@ -12,10 +44,10 @@ class Post {
   final List<String>? exercises;
   final String userId;
   final String username;
-
-  @override
+  final List<String> likes; // Added: List of user IDs who liked the post
+  final List<Comment> comments; // Added: List of comments  @override
   String toString() {
-    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, location: $location, duration: $duration, photoURL: $photoURL)';
+    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, location: $location, duration: $duration, photoURL: $photoURL, likes: ${likes.length}, comments: ${comments.length})';
   }
 
   Post({
@@ -29,6 +61,8 @@ class Post {
     required this.exercises,
     required this.userId,
     required this.username,
+    this.likes = const [], // Default to empty list
+    this.comments = const [], // Default to empty list
   });
 
   Post copyWith({
@@ -42,6 +76,8 @@ class Post {
     String? playlist,
     Intensity? intensity,
     List<String>? exercises,
+    List<String>? likes,
+    List<Comment>? comments,
   }) {
     return Post(
       id: id ?? this.id,
@@ -54,6 +90,8 @@ class Post {
       playlist: playlist ?? this.playlist,
       intensity: intensity ?? this.intensity,
       exercises: exercises ?? this.exercises,
+      likes: likes ?? this.likes,
+      comments: comments ?? this.comments,
     );
   }
 
@@ -76,6 +114,11 @@ class Post {
             [],
         userId: json['userId'] as String? ?? '',
         username: json['username'] as String? ?? 'Unknown User',
+        likes: (json['likes'] as List<dynamic>?)?.cast<String>() ?? [],
+        comments: (json['comments'] as List<dynamic>?)
+            ?.map((e) => Comment.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+            [],
       );
     } catch (e) {
       print("Error parsing post: $e");
@@ -85,8 +128,8 @@ class Post {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'duration': duration != null ? Timestamp.fromDate(duration!) : null,
+      'id': id.toString(),
+      'duration': duration?.toIso8601String(),
       'location': location,
       'photoURL': photoURL,
       'playlist': playlist,
@@ -95,6 +138,8 @@ class Post {
       'exercises': exercises,
       'userId': userId,
       'username': username,
+      'likes': likes,
+      'comments': comments.map((e) => e.toJson()).toList(),
     };
   }
 

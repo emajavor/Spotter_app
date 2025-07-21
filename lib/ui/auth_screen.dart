@@ -94,7 +94,7 @@ class _AuthScreenState extends State<AuthScreen>
                       controller: passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
-                        hintText: 'Lozinka',
+                        hintText: 'Password',
                         prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -106,7 +106,7 @@ class _AuthScreenState extends State<AuthScreen>
                     TextField(
                       controller: usernameController,
                       decoration: InputDecoration(
-                        hintText: 'Korisničko ime (obavezno za registraciju)',
+                        hintText: 'Username (for signing up)',
                         prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -132,7 +132,7 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
-                      child: Text('Prijavi se', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      child: Text('Sign In', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
@@ -163,7 +163,7 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
-                      child: Text('Registriraj se', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      child: Text('Sign Up', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -171,7 +171,7 @@ class _AuthScreenState extends State<AuthScreen>
                         context.read<AuthBloc>().add(SignInWithGoogle());
                       },
                       icon: Icon(Icons.g_mobiledata, color: Theme.of(context).colorScheme.onSecondary),
-                      label: Text('Prijavi se s Googleom', style: GoogleFonts.poppins()),
+                      label: Text('Sign In with Google', style: GoogleFonts.poppins()),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.secondary,
                         foregroundColor: Theme.of(context).colorScheme.onSecondary,

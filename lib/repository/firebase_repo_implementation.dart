@@ -1,11 +1,14 @@
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spotter_app/repository/firebase_repo_interface.dart';
 
 import '../models/post.dart';
@@ -21,24 +24,35 @@ class FirebaseRepo implements IFirebaseRepo {
 
   @override
   Future<List<Post>> getAll() async {
+    try {
+      // Fetch from Firestore
+      final querySnapshot = await db
+          .collection('posts')
+          .orderBy('id', descending: true) // Server-side sort by id
+          .get(const GetOptions(source: Source.serverAndCache));
+      final posts = querySnapshot.docs
+          .map((doc) => Post.fromJson(doc.data()))
+          .toList();
 
-    List<Post> postList = [];
-    CollectionReference collectionRef = db.collection("posts");
-    QuerySnapshot querySnapshot = await collectionRef.get();
-    final posts = querySnapshot.docs.map((doc) => doc.data()).toList();
-
-    for (var element in posts) {
-      try {
-        print(element);
-        Post post = Post.fromJson(element as Map<String, dynamic>);
-        postList.add(post);
-      } catch (e) {
-        print("error: ${e.toString()}");
+      // Cache posts
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          'cached_posts', jsonEncode(posts.map((e) => e.toJson()).toList()));
+      print("Fetched and cached ${posts.length} posts: ${posts.map((p) => p.id).toList()}");
+      return posts;
+    } catch (e) {
+      print("Error fetching posts: $e");
+      // Fallback to cached posts if network fails
+      final prefs = await SharedPreferences.getInstance();
+      final cachedPosts = prefs.getString('cached_posts');
+      if (cachedPosts != null) {
+        final List<dynamic> decoded = jsonDecode(cachedPosts);
+        final cached = decoded.map((e) => Post.fromJson(e)).toList();
+        print("Returning cached posts: ${cached.length}");
+        return cached;
       }
-
+      rethrow; // If no cache, rethrow error
     }
-    debugPrint("Posts list ${postList.toString()}");
-    return postList;
   }
 
   // Future<Post> fetchPost() async {
@@ -71,7 +85,7 @@ class FirebaseRepo implements IFirebaseRepo {
   @override
   Future<Post?> getPost(String id) async {
     Post? post;
-    final docRef = db.collection("posts").doc(id);
+    final docRef = db.collection("posts").doc(id as String?);
     await docRef.get().then(
           (DocumentSnapshot doc) {
         final data = doc.data() as Map<String, dynamic>;
@@ -96,10 +110,12 @@ class FirebaseRepo implements IFirebaseRepo {
         }
         post = post.copyWith(username: user.username);
       }
-      // Set default photoURL if null
       post = post.copyWith(photoURL: post.photoURL.isEmpty ? '' : post.photoURL);
       print("Adding post: ${post.toString()}");
-      await db.collection('posts').doc(post.id).set(post.toJson());
+      await db.collection('posts').doc(post.id).set({
+        ...post.toJson(),
+        'duration': post.duration != null ? Timestamp.fromDate(post.duration!) : null,
+      });
       print("Post added successfully: ${post.id}");
     } catch (e) {
       print("Error adding post: $e");
@@ -110,29 +126,9 @@ class FirebaseRepo implements IFirebaseRepo {
   @override
   Future<String?> uploadImage(XFile image) async {
     try {
-      File fileToUpload = File(image.path);
-      // Try to compress image
-      try {
-        final compressedFile = await FlutterImageCompress.compressAndGetFile(
-          image.path,
-          '${image.path}_compressed.jpg',
-          quality: 85,
-          minWidth: 800,
-          minHeight: 600,
-        );
-        if (compressedFile != null) {
-          fileToUpload = File(compressedFile.path);
-          print("Image compressed successfully");
-        } else {
-          print("Compression failed, using original image");
-        }
-      } catch (e) {
-        print("Compression error: $e, using original image");
-      }
-
       final fileName = DateTime.now().millisecondsSinceEpoch.toString();
       final reference = _storage.ref().child("post_images/$fileName");
-      await reference.putFile(fileToUpload);
+      await reference.putFile(File(image.path));
       final url = await reference.getDownloadURL();
       print("Image uploaded: $url");
       return url;
@@ -140,6 +136,20 @@ class FirebaseRepo implements IFirebaseRepo {
       print("Error uploading image: $e");
       return null;
     }
+  }
+
+  static Future<XFile> compressImage(XFile image) async {
+    final bytes = await image.readAsBytes();
+    final compressed = await FlutterImageCompress.compressWithList(
+      bytes,
+      minHeight: 600,
+      minWidth: 800,
+      quality: 85,
+    );
+    final tempDir = Directory.systemTemp;
+    final tempFile = File('${tempDir.path}/compressed_${image.name}');
+    await tempFile.writeAsBytes(compressed);
+    return XFile(tempFile.path);
   }
 
   Future<void> saveUser(User user) async {

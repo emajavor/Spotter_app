@@ -891,31 +891,30 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       }
                       String photoURL = '';
                       if (_image != null) {
-                        photoURL = await context
-                            .read<FirebaseRepo>()
-                            .uploadImage(_image!) ??
-                            '';
+                        try {
+                          photoURL = await context.read<FirebaseRepo>().uploadImage(_image!) ?? '';
+                        } catch (e) {
+                          print('Failed to upload image: $e');
+                        }
                       }
                       try {
                         final post = Post(
-                          id: DateTime.now()
-                              .millisecondsSinceEpoch
-                              .toString(),
-                          duration:
-                          selectedDate ?? DateTime.now(),
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          duration: selectedDate ?? DateTime.now(),
                           location: postBloc.location,
                           photoURL: photoURL,
                           playlist: playlistController.text,
                           workout_type: postBloc.workoutType,
-                          intensity: selectedIntensity ??
-                              Intensity.Easy,
+                          intensity: selectedIntensity ?? Intensity.Easy,
                           exercises: postBloc.exercises,
                           userId: userId,
                           username: username,
+                          likes: [],
+                          comments: [],
                         );
-                        context
-                            .read<PostBloc>()
-                            .add(AddPost(addedPost: post));
+                        context.read<PostBloc>().add(AddPost(addedPost: post));
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        setState(() => _isLoading = false);
                       } catch (e) {
                         setState(() => _isLoading = false);
                         ScaffoldMessenger.of(context).showSnackBar(

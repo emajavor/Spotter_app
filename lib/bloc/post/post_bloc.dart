@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +35,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<UpdatePost>(_onUpdatePost);
     on<GetPosts>(_onGetPosts);
     on<GetPost>(_onGetPost);
+    on<ToggleLikePost>(_onToggleLikePost);
+    on<AddComment>(_onAddComment);
   }
 
   Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
@@ -46,7 +49,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       _location = "";
       _playlist = "";
       _image = null;
-      emit(const PostInitial());
+      add(const GetPosts());
     } catch (e) {
       print("Error in AddPost: $e");
       emit(FailedAddedPost(e.toString()));
@@ -113,27 +116,35 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
   void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
     print('Updating post with id: ${event.id} to intensity: ${event.newIntensity}');
-      try {
-        await _firebaseRepo.updateField(event.id, event.newIntensity.description);
-        add(GetPost(id: event.id, intensity: event.newIntensity));
-      } catch(e) {
-        emit(FailedUpdatedPost(e.toString()));
-      }
+    try {
+      await _firebaseRepo.updateField(event.id, event.newIntensity.description);
+      add(GetPost(id: event.id, intensity: event.newIntensity));
+    } catch (e) {
+      emit(FailedUpdatedPost(e.toString()));
+    }
   }
 
   void _onGetPosts(GetPosts event, Emitter<PostState> emit) async {
-    emit(FetchingPosts());
+    emit(const FetchingPosts());
     try {
-      print("fetching posts");
       final posts = await _firebaseRepo.getAll();
-      debugPrint(posts.toString());
-
-      emit(FetchedPosts(posts));
+      print('Fetched ${posts.length} posts from Firebase: ${posts.map((p) => p.id).toList()}');
+      // Sort newest first, with fallback for non-numeric IDs
+      final sortedPosts = posts
+        ..sort((a, b) {
+          try {
+            return int.parse(b.id).compareTo(int.parse(a.id));
+          } catch (e) {
+            // Fallback: If IDs aren't numeric, sort lexicographically
+            return b.id.compareTo(a.id);
+          }
+        });
+      emit(FetchedPosts(sortedPosts));
     } catch (e) {
-      emit(FetchingFailed(e.toString()));    }
+      print('Error fetching posts: $e');
+      emit(FetchingFailed(e.toString()));
+    }
   }
-
-
 
   FutureOr<void> _onGetPost(GetPost event, Emitter<PostState> emit) async {
     try {
@@ -144,8 +155,59 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       } else {
         emit(const FailedUpdatedPost("No post"));
       }
-    } catch(e) {
-        emit(const FailedUpdatedPost("Failed to update Post"));
+    } catch (e) {
+      emit(const FailedUpdatedPost("Failed to update Post"));
+    }
+  }
+
+  void _onToggleLikePost(ToggleLikePost event, Emitter<PostState> emit) async {
+    final currentState = state;
+    if (currentState is FetchedPosts) {
+      try {
+        final updatedPosts = currentState.allPosts.map((post) {
+          if (post.id == event.postId) {
+            final newLikes = List<String>.from(post.likes);
+            if (newLikes.contains(event.userId)) {
+              newLikes.remove(event.userId);
+            } else {
+              newLikes.add(event.userId);
+            }
+            return post.copyWith(likes: newLikes);
+          }
+          return post;
+        }).toList();
+        await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(event.postId)
+            .update({'likes': FieldValue.arrayUnion([event.userId])});
+        emit(FetchedPosts(updatedPosts));
+      } catch (e) {
+        emit(FetchingFailed(e.toString()));
+      }
+    }
+  }
+
+  void _onAddComment(AddComment event, Emitter<PostState> emit) async {
+    final currentState = state;
+    if (currentState is FetchedPosts) {
+      try {
+        final updatedPosts = currentState.allPosts.map((post) {
+          if (post.id == event.postId) {
+            final newComments = List<Comment>.from(post.comments)..add(event.comment);
+            return post.copyWith(comments: newComments);
+          }
+          return post;
+        }).toList();
+        await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(event.postId)
+            .update({
+          'comments': FieldValue.arrayUnion([event.comment.toJson()])
+        });
+        emit(FetchedPosts(updatedPosts));
+      } catch (e) {
+        emit(FetchingFailed(e.toString()));
+      }
     }
   }
 }

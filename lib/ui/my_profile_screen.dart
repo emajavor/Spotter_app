@@ -82,7 +82,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     future: context.read<FirebaseRepo>().getUser(userId),
                     builder: (context, snapshot) {
                       String username = 'Loading...';
-                      String profilePictureUrl = 'https://via.placeholder.com/150';
+                      String profilePictureUrl = 'assets/images/boy.png';
                       if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data != null) {
                         username = snapshot.data!.username;
                         profilePictureUrl = snapshot.data!.profilePictureUrl.isNotEmpty
@@ -272,7 +272,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 return user;
               }),
               builder: (context, snapshot) {
-                String profilePictureUrl = 'https://via.placeholder.com/150';
+                String profilePictureUrl = 'assets/images/boy.png';
                 String username = post.username; // Fallback to post.username
                 if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data != null) {
                   profilePictureUrl = snapshot.data!.profilePictureUrl.isNotEmpty

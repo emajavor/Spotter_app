@@ -16,7 +16,8 @@ class WorkoutDetailScreen extends StatefulWidget {
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   void _updateIntensity(Intensity? newIntensity) async {
     BlocProvider.of<PostBloc>(context).add(
-        UpdatePost(id: widget.workoutPost.id, newIntensity: newIntensity!));
+      UpdatePost(id: widget.workoutPost.id.toString(), newIntensity: newIntensity!),
+    );
     widget.workoutPost.intensity = newIntensity;
     Navigator.of(context).pop();
   }
