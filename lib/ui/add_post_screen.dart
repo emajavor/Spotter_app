@@ -13,8 +13,9 @@ import 'package:image_picker/image_picker.dart';
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
-
+import '../recommendation_helper.dart';
 import '../repository/firebase_repo_implementation.dart';
+
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -28,6 +29,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
+  final muscleGroupController = TextEditingController();
+  final equipmentController = TextEditingController();
   final locationController = TextEditingController();
   final playlistController = TextEditingController();
   Intensity? selectedIntensity = Intensity.Easy;
@@ -36,14 +39,32 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
+  final RecommendationHelper _recommendationHelper = RecommendationHelper();
+  String? _replacementExercise;
+  String? _stalenessAdvice;
+  bool _isRecommendationLoading = false;
+  String? _muscleGroup;
+  String? _equipment;
+
+  @override
+  void initState() {
+    super.initState();
+    _recommendationHelper.init().then((_) {
+      print('RecommendationHelper initialized');
+    }).catchError((e) {
+      print('Failed to initialize RecommendationHelper: $e');
+    });  }
 
   @override
   void dispose() {
     exerciseController.dispose();
     workoutTypeController.dispose();
+    muscleGroupController.dispose();
+    equipmentController.dispose();
     locationController.dispose();
     playlistController.dispose();
     _scrollController.dispose();
+    _recommendationHelper.close();
 
     super.dispose();
   }
@@ -186,12 +207,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
           await Future.delayed(const Duration(seconds: 2));
           if (mounted) {
             context.read<PostBloc>().add(const GetPosts());
-            // Navigate to HomeScreen with Profile tab
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/start',
                   (route) => false,
-              arguments: {'initialIndex': 2}, // Select Profile tab
+              arguments: {'initialIndex': 2},
             );
           }
         } else if (state is FailedAddedPost) {
@@ -425,6 +445,164 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               Card(
                 shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Theme.of(context).colorScheme.surface,
+                elevation: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20, left: 10),
+                      child: Text(
+                        'Muscle Group:',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (_muscleGroup != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                        child: Text(
+                          _muscleGroup!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextField(
+                        controller: muscleGroupController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          hintText: 'Enter muscle group (e.g., Legs)',
+                          prefixIcon: Icon(
+                            Icons.accessibility,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: GoogleFonts.poppins(
+                            color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 15.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (muscleGroupController.text.isNotEmpty) {
+                              setState(() {
+                                _muscleGroup = muscleGroupController.text;
+                                muscleGroupController.clear();
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            _muscleGroup == null ? 'SAVE' : 'EDIT',
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600, fontSize: 15),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Theme.of(context).colorScheme.surface,
+                elevation: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20, left: 10),
+                      child: Text(
+                        'Equipment:',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (_equipment != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                        child: Text(
+                          _equipment!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      child: TextField(
+                        controller: equipmentController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          hintText: 'Enter equipment (e.g., Barbell)',
+                          prefixIcon: Icon(
+                            Icons.fitness_center,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: GoogleFonts.poppins(
+                            color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 15.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (equipmentController.text.isNotEmpty) {
+                              setState(() {
+                                _equipment = equipmentController.text;
+                                equipmentController.clear();
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            _equipment == null ? 'SAVE' : 'EDIT',
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600, fontSize: 15),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Card(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15)),
                 color: Theme.of(context).colorScheme.surface,
                 elevation: 2,
@@ -508,8 +686,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         builder: (context, state) {
                           String? location;
                           if (state is AddedLocation) {
-                            location = state
-                                .addedLocation; // Spremi vrijednost iz Bloca
+                            location = state.addedLocation;
                           }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -818,6 +995,65 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _isRecommendationLoading
+                    ? null
+                    : () async {
+                  if (context.read<PostBloc>().workoutType.isEmpty ||
+                      _muscleGroup == null ||
+                      _equipment == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Please save workout type, muscle group, and equipment.',
+                          style: GoogleFonts.poppins(),
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() => _isRecommendationLoading = true);
+                  final result = await _recommendationHelper.getRecommendation(
+                    exercise: context.read<PostBloc>().workoutType,
+                    muscleGroup: _muscleGroup!,
+                    equipment: _equipment!,
+                  );
+                  setState(() {
+                    _replacementExercise = result['replacement'] ?? 'Error';
+                    _stalenessAdvice = result['advice'] ?? 'Error';
+                    _isRecommendationLoading = false;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                ),
+                child: Text(
+                  'Get Recommendation',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_replacementExercise != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Recommended Replacement: $_replacementExercise',
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              if (_stalenessAdvice != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Staleness Advice: $_stalenessAdvice',
+                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),

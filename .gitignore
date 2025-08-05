@@ -25,3 +25,10 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+.idea/
+.vscode/
+.DS_Store
+*.iml
+
+# FVM Version Cache
+.fvm/

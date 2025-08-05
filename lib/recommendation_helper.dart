@@ -1,24 +1,41 @@
-import 'dart:io';
-import 'dart:nativewrappers/_internal/vm/lib/typed_data_patch.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tflite/tflite.dart';
+import 'dart:typed_data';
 
 class RecommendationHelper {
-  late Interpreter _replacementInterpreter;
-  late Interpreter _adviceInterpreter;
-  late List<String> _exerciseLabels;
-  late List<String> _muscleLabels;
-  late List<String> _equipmentLabels;
-  late List<String> _replacementLabels;
-  late List<String> _adviceLabels;
+  List<String> _exerciseLabels = [];
+  List<String> _muscleLabels = [];
+  List<String> _equipmentLabels = [];
+  List<String> _replacementLabels = [];
+  List<String> _adviceLabels = [];
+  bool _isInitialized = false;
 
   RecommendationHelper();
 
   Future<void> init() async {
     try {
       // Učitaj modele
-      _replacementInterpreter = await Interpreter.fromAsset('replacement_model.tflite');
-      _adviceInterpreter = await Interpreter.fromAsset('advice_model.tflite');
+      await Tflite.loadModel(
+        model: 'assets/replacement_model.tflite',
+        labels: 'assets/labels/replacement_labels.txt',
+        isAsset: true,
+      ).then((_) {
+        print('Replacement model loaded successfully');
+      }).catchError((e) {
+        print('Error loading replacement model: $e');
+        throw Exception('Failed to load replacement model: $e');
+      });
+
+      await Tflite.loadModel(
+        model: 'assets/advice_model.tflite',
+        labels: 'assets/labels/advice_labels.txt',
+        isAsset: true,
+      ).then((_) {
+        print('Advice model loaded successfully');
+      }).catchError((e) {
+        print('Error loading advice model: $e');
+        throw Exception('Failed to load advice model: $e');
+      });
 
       // Učitaj labele
       _exerciseLabels = (await rootBundle.loadString('assets/labels/exercise_labels.txt')).split('\n');
@@ -26,8 +43,12 @@ class RecommendationHelper {
       _equipmentLabels = (await rootBundle.loadString('assets/labels/equipment_labels.txt')).split('\n');
       _replacementLabels = (await rootBundle.loadString('assets/labels/replacement_labels.txt')).split('\n');
       _adviceLabels = (await rootBundle.loadString('assets/labels/advice_labels.txt')).split('\n');
+
+      print('Labels loaded: exercises=$_exerciseLabels, muscles=$_muscleLabels, equipment=$_equipmentLabels');
+      _isInitialized = true;
     } catch (e) {
-      print('Error loading models or labels: $e');
+      print('Error initializing RecommendationHelper: $e');
+      _isInitialized = false;
     }
   }
 
@@ -36,6 +57,10 @@ class RecommendationHelper {
     required String muscleGroup,
     required String equipment,
   }) async {
+    if (!_isInitialized) {
+      return {'error': 'RecommendationHelper not initialized. Failed to load models or labels.'};
+    }
+
     try {
       // Kodiraj ulaze
       final exerciseIdx = _exerciseLabels.indexOf(exercise);
@@ -43,21 +68,38 @@ class RecommendationHelper {
       final equipmentIdx = _equipmentLabels.indexOf(equipment);
 
       if (exerciseIdx == -1 || muscleIdx == -1 || equipmentIdx == -1) {
-        return {'error': 'Invalid input. Ensure exercise, muscle group, and equipment are valid.'};
+        return {
+          'error': 'Invalid input. Ensure exercise, muscle group, and equipment are valid. '
+              'Received: exercise=$exercise, muscleGroup=$muscleGroup, equipment=$equipment'
+        };
       }
 
       // Pripremi ulaz za modele
-      final input = Float32List.fromList([exerciseIdx.toDouble(), muscleIdx.toDouble(), equipmentIdx.toDouble()]);
-      final replacementOutput = List.filled(1, List.filled(_replacementLabels.length, 0.0));
-      final adviceOutput = List.filled(1, List.filled(_adviceLabels.length, 0.0));
+      final input = Float32List.fromList([exerciseIdx.toDouble(), muscleIdx.toDouble(), equipmentIdx.toDouble()]).buffer.asUint8List();
 
-      // Pokreni predikcije
-      _replacementInterpreter.run(input, replacementOutput);
-      _adviceInterpreter.run(input, adviceOutput);
+      // Pokreni predikcije za replacement model
+      await Tflite.loadModel(
+        model: 'assets/replacement_model.tflite',
+        labels: 'assets/labels/replacement_labels.txt',
+        isAsset: true,
+      );
+      final replacementOutput = await Tflite.runModelOnFrame(
+        bytesList: [input],
+      );
+
+      // Pokreni predikcije za advice model
+      await Tflite.loadModel(
+        model: 'assets/advice_model.tflite',
+        labels: 'assets/labels/advice_labels.txt',
+        isAsset: true,
+      );
+      final adviceOutput = await Tflite.runModelOnFrame(
+        bytesList: [input],
+      );
 
       // Dekodiraj rezultate
-      final replacementIdx = replacementOutput[0].indexOf(replacementOutput[0].reduce((a, b) => a > b ? a : b));
-      final adviceIdx = adviceOutput[0].indexOf(adviceOutput[0].reduce((a, b) => a > b ? a : b));
+      final replacementIdx = (replacementOutput![0] as List).indexOf((replacementOutput[0] as List).reduce((a, b) => a > b ? a : b));
+      final adviceIdx = (adviceOutput![0] as List).indexOf((adviceOutput[0] as List).reduce((a, b) => a > b ? a : b));
 
       return {
         'replacement': _replacementLabels[replacementIdx],
@@ -70,7 +112,7 @@ class RecommendationHelper {
   }
 
   void close() {
-    _replacementInterpreter.close();
-    _adviceInterpreter.close();
+    Tflite.close();
+    _isInitialized = false;
   }
 }
