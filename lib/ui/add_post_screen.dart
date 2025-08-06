@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -5,17 +6,16 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:async';
-import 'package:image_picker/image_picker.dart';
+
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
-import 'package:omni_datetime_picker/omni_datetime_picker.dart';
-import '../recommendation_helper.dart';
 import '../repository/firebase_repo_implementation.dart';
-
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -30,42 +30,39 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
   final muscleGroupController = TextEditingController();
-  final equipmentController = TextEditingController();
   final locationController = TextEditingController();
   final playlistController = TextEditingController();
+  final TextEditingController _setsController = TextEditingController();
+  final WorkoutModel _mlModel = WorkoutModel();
+  bool _mlReady = false;
   Intensity? selectedIntensity = Intensity.Easy;
   DateTime? selectedDate;
   XFile? _image;
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-  final RecommendationHelper _recommendationHelper = RecommendationHelper();
-  String? _replacementExercise;
-  String? _stalenessAdvice;
-  bool _isRecommendationLoading = false;
   String? _muscleGroup;
-  String? _equipment;
+  final Map<String,int> _weeklyTotals = {};
+
 
   @override
   void initState() {
     super.initState();
-    _recommendationHelper.init().then((_) {
-      print('RecommendationHelper initialized');
-    }).catchError((e) {
-      print('Failed to initialize RecommendationHelper: $e');
-    });  }
+    _mlModel.init().then((_) {
+      setState(() => _mlReady = true);
+    });
+  }
 
   @override
   void dispose() {
     exerciseController.dispose();
     workoutTypeController.dispose();
     muscleGroupController.dispose();
-    equipmentController.dispose();
     locationController.dispose();
     playlistController.dispose();
     _scrollController.dispose();
-    _recommendationHelper.close();
-
+    _setsController.dispose();
+    _mlModel.close();
     super.dispose();
   }
 
@@ -267,7 +264,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                       builder: (context, state) {
                         print("state in AddedScreen is $state");
                         if (state is AddedExercises) {
-                          print(state);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: state.addedExercises
@@ -309,17 +305,74 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      child: TextField(
+                        controller: _setsController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          hintText: 'Enter number of sets',
+                          prefixIcon: Icon(
+                            Icons.repeat,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        style: GoogleFonts.poppins(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 15.0),
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (exerciseController.text.isNotEmpty) {
-                              context.read<PostBloc>().add(AddExercises(
-                                  addedExercises: exerciseController.text));
-                              exerciseController.clear();
+                          onPressed: () async {
+                            final exercise = exerciseController.text.trim();
+                            final setsText = _setsController.text.trim();
+                            if (exercise.isEmpty || setsText.isEmpty) return;
+
+                            if (!_mlReady) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Model loading, please wait…')),
+                              );
+                              return;
                             }
+
+                            final setsToAdd = int.tryParse(setsText) ?? 0;
+                            final soFar      = _weeklyTotals[exercise] ?? 0;
+
+                            final pred = await _mlModel.predict(
+                              muscle: exercise,
+                              soFar: soFar,
+                              toAdd: setsToAdd,
+                            );
+                            final labels = ['undertrained','balanced','overtrained'];
+                            final label  = labels[pred];
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('This is $label for $exercise')),
+                            );
+
+                            if (pred == 2) {
+                              // overtrained: stop
+                              return;
+                            }
+
+                            // Passed ML check: dispatch to bloc
+                            context.read<PostBloc>().add(
+                              AddExercises(addedExercises: exercise),
+                            );
+
+                            // Update your weekly total
+                            setState(() {
+                              _weeklyTotals[exercise] = soFar + setsToAdd;
+                            });
+
+                            exerciseController.clear();
+                            _setsController.clear();
                           },
+
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
@@ -513,85 +566,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           ),
                           child: Text(
                             _muscleGroup == null ? 'SAVE' : 'EDIT',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Equipment:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (_equipment != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                        child: Text(
-                          _equipment!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                      child: TextField(
-                        controller: equipmentController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          hintText: 'Enter equipment (e.g., Barbell)',
-                          prefixIcon: Icon(
-                            Icons.fitness_center,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(
-                            color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 15.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (equipmentController.text.isNotEmpty) {
-                              setState(() {
-                                _equipment = equipmentController.text;
-                                equipmentController.clear();
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            _equipment == null ? 'SAVE' : 'EDIT',
                             style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600, fontSize: 15),
                           ),
@@ -996,64 +970,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isRecommendationLoading
-                    ? null
-                    : () async {
-                  if (context.read<PostBloc>().workoutType.isEmpty ||
-                      _muscleGroup == null ||
-                      _equipment == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Please save workout type, muscle group, and equipment.',
-                          style: GoogleFonts.poppins(),
-                        ),
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                      ),
-                    );
-                    return;
-                  }
-                  setState(() => _isRecommendationLoading = true);
-                  final result = await _recommendationHelper.getRecommendation(
-                    exercise: context.read<PostBloc>().workoutType,
-                    muscleGroup: _muscleGroup!,
-                    equipment: _equipment!,
-                  );
-                  setState(() {
-                    _replacementExercise = result['replacement'] ?? 'Error';
-                    _stalenessAdvice = result['advice'] ?? 'Error';
-                    _isRecommendationLoading = false;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                ),
-                child: Text(
-                  'Get Recommendation',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                ),
-              ),
               const SizedBox(height: 16),
-              if (_replacementExercise != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    'Recommended Replacement: $_replacementExercise',
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              if (_stalenessAdvice != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    'Staleness Advice: $_stalenessAdvice',
-                    style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ),
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),

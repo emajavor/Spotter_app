@@ -1,6 +1,0 @@
-Barbell
-Dumbbells
-Leg Press Machine
-Pull-up Bar
-Treadmill
-Unknown
