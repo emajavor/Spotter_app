@@ -26,7 +26,7 @@ class WorkoutModel {
     // 1) Map muscle → index (must match your Python sort order)
     const muscleGroups = [
       'Biceps','Back','Calves','Chest','Glutes',
-      'Hamstring','Quads','Shoulder','Triceps','Abs',
+      'Hamstrings','Quads','Shoulder','Triceps','Abs',
     ];
     final idx = muscleGroups.indexOf(muscle);
     if (idx < 0) throw Exception('Unknown muscle: $muscle');

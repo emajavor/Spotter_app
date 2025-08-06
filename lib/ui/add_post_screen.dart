@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,11 +25,9 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   //final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
-  final muscleGroupController = TextEditingController();
   final locationController = TextEditingController();
   final playlistController = TextEditingController();
   final TextEditingController _setsController = TextEditingController();
@@ -42,7 +39,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-  String? _muscleGroup;
   Map<String, int> _weeklyTotals = {}; // Track sets by muscle group
   Exercise? selectedExercise; // Store selected exercise object
   int selectedSets = 1;
@@ -60,7 +56,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
   void dispose() {
     //exerciseController.dispose();
     workoutTypeController.dispose();
-    muscleGroupController.dispose();
     locationController.dispose();
     playlistController.dispose();
     _scrollController.dispose();
@@ -269,12 +264,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         if (state is AddedExercises) {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: state.addedExercises
+                            children: state.exercises
                                 .map((exercise) => Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 20, vertical: 8),
                                       child: Text(
-                                        exercise,
+                                        exercise.toDisplayString(),
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           color: Theme.of(context)
@@ -367,38 +362,53 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             }
 
                             final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
-                            final muscleGroup = selectedExercise!.muscleGroup;
-                            final soFar = _weeklyTotals[muscleGroup] ?? 0;
+                            final muscleGroups = selectedExercise!.muscleGroups;
+                            bool isOvertrained = false;
+                            List<String> statusMessages = [];
 
-                            final pred = await _mlModel.predict(
-                              muscle: muscleGroup,
-                              soFar: soFar,
-                              toAdd: setsToAdd,
-                            );
-                            final labels = ['undertrained','balanced','overtrained'];
-                            final label  = labels[pred];
+
+                            for (final muscleGroup in muscleGroups) {
+                              final soFar = _weeklyTotals[muscleGroup] ?? 0;
+                              final pred = await _mlModel.predict(
+                                muscle: muscleGroup,
+                                soFar: soFar,
+                                toAdd: setsToAdd,
+                              );
+                              final labels = ['undertrained', 'balanced', 'overtrained'];
+                              final label = labels[pred];
+                              statusMessages.add('$muscleGroup: $label');
+                              if (pred == 2) isOvertrained = true;
+                            }
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('This is $label for $muscleGroup'),),
+                              SnackBar(
+                                content: Text(statusMessages.join(', ')),
+                              ),
                             );
 
-                            if (pred == 2) {
-                              // overtrained: stop
+                            if (isOvertrained) {
+                              // Stop if any muscle group is overtrained
                               return;
                             }
 
                             // Passed ML check: dispatch to bloc
                             context.read<PostBloc>().add(
                               AddExercises(
-                                addedExercises:
-                                '${selectedExercise!.name} (${muscleGroup}, $setsToAdd sets)',
+                                exerciseEntry: ExerciseEntry(
+                                  name: selectedExercise!.name,
+                                  muscleGroups: selectedExercise!.muscleGroups,
+                                  sets: setsToAdd,
+                                ),
                               ),
                             );
 
-                            // Update weekly total for the muscle group
+                            // Update weekly totals for all muscle groups
                             setState(() {
-                              _weeklyTotals[muscleGroup] = soFar + setsToAdd;                            });
-
+                              for (final muscleGroup in muscleGroups) {
+                                _weeklyTotals[muscleGroup] =
+                                    (_weeklyTotals[muscleGroup] ?? 0) + setsToAdd;
+                              }
+                            });
                             _setsController.clear();
                             setState(() {
                               selectedExercise = null;
@@ -524,85 +534,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           ],
                         );
                       },
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Muscle Group:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (_muscleGroup != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-                        child: Text(
-                          _muscleGroup!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                      child: TextField(
-                        controller: muscleGroupController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          hintText: 'Enter muscle group (e.g., Legs)',
-                          prefixIcon: Icon(
-                            Icons.accessibility,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(
-                            color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 15.0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (muscleGroupController.text.isNotEmpty) {
-                              setState(() {
-                                _muscleGroup = muscleGroupController.text;
-                                muscleGroupController.clear();
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            _muscleGroup == null ? 'SAVE' : 'EDIT',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                        ),
-                      ),
                     ),
                   ],
                 ),

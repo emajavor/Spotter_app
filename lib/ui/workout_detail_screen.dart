@@ -84,13 +84,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                       width: MediaQuery.of(context).size.width * 0.93,
                       height: MediaQuery.of(context).size.height * 0.15,
                       child: Padding(
-                          padding: EdgeInsets.only(
-                              left: MediaQuery.sizeOf(context).width * 0.05,
-                              top: MediaQuery.sizeOf(context).width * 0.05
-                          ),
-                          child: Text(
-                              'Exercises:\n${widget.workoutPost.exercises?.toStringWithoutBrackets()}',
-                              style: const TextStyle(fontSize: 18))),
+                        padding: EdgeInsets.only(
+                          left: MediaQuery.sizeOf(context).width * 0.05,
+                          top: MediaQuery.sizeOf(context).width * 0.05,
+                        ),
+                        child: Text(
+                          'Exercises:\n${widget.workoutPost.exercises.map((exercise) => exercise.toDisplayString()).join('\n')}',
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      ),
                     ),
                   ),
                   Center(

@@ -16,13 +16,11 @@ class AddPost extends PostEvent{
   List<Object> get props => [addedPost];
 }
 
-class AddExercises extends PostEvent{
-  final String addedExercises;
-
-  const AddExercises({required this.addedExercises});
-
+class AddExercises extends PostEvent {
+  final ExerciseEntry exerciseEntry;
+  const AddExercises({required this.exerciseEntry});
   @override
-  List<Object> get props => [addedExercises];
+  List<Object> get props => [exerciseEntry];
 }
 
 class AddWorkoutType extends PostEvent{

@@ -123,13 +123,11 @@ class EmptyPlaylist extends PostState{
   const EmptyPlaylist();
 }
 
-class AddedExercises extends PostState{
-  final List<String> addedExercises;
-
-  const AddedExercises(this.addedExercises);
-
+class AddedExercises extends PostState {
+  final List<ExerciseEntry> exercises;
+  const AddedExercises(this.exercises);
   @override
-  List<Object> get props => [addedExercises];
+  List<Object> get props => [exercises];
 }
 
 class EmptyExercises extends PostState{

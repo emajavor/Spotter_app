@@ -25,16 +25,14 @@ class FirebaseRepo implements IFirebaseRepo {
   @override
   Future<List<Post>> getAll() async {
     try {
-      // Fetch from Firestore
       final querySnapshot = await db
           .collection('posts')
-          .orderBy('id', descending: true) // Server-side sort by id
+          .orderBy('id', descending: true)
           .get(const GetOptions(source: Source.serverAndCache));
       final posts = querySnapshot.docs
           .map((doc) => Post.fromJson(doc.data()))
           .toList();
 
-      // Cache posts
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
           'cached_posts', jsonEncode(posts.map((e) => e.toJson()).toList()));
@@ -42,7 +40,6 @@ class FirebaseRepo implements IFirebaseRepo {
       return posts;
     } catch (e) {
       print("Error fetching posts: $e");
-      // Fallback to cached posts if network fails
       final prefs = await SharedPreferences.getInstance();
       final cachedPosts = prefs.getString('cached_posts');
       if (cachedPosts != null) {
@@ -51,7 +48,7 @@ class FirebaseRepo implements IFirebaseRepo {
         print("Returning cached posts: ${cached.length}");
         return cached;
       }
-      rethrow; // If no cache, rethrow error
+      rethrow;
     }
   }
 
@@ -59,6 +56,7 @@ class FirebaseRepo implements IFirebaseRepo {
   //   final response = await http
   //       .get(Uri.parse(''));
   //
+  //   if (response.statusCode == 200) {
   //   if (response.statusCode == 200) {
   //     // If the server did return a 200 OK response,
   //     // then parse the JSON.
@@ -84,17 +82,18 @@ class FirebaseRepo implements IFirebaseRepo {
   }
   @override
   Future<Post?> getPost(String id) async {
-    Post? post;
-    final docRef = db.collection("posts").doc(id as String?);
-    await docRef.get().then(
-          (DocumentSnapshot doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        post = Post.fromJson(data);
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-
-    return post;
+    try {
+      final docRef = db.collection("posts").doc(id);
+      final doc = await docRef.get();
+      if (doc.exists) {
+        return Post.fromJson(doc.data() as Map<String, dynamic>);
+      }
+      print("Post not found: $id");
+      return null;
+    } catch (e) {
+      print("Error getting post: $e");
+      return null;
+    }
   }
 
   @override
@@ -112,10 +111,7 @@ class FirebaseRepo implements IFirebaseRepo {
       }
       post = post.copyWith(photoURL: post.photoURL.isEmpty ? '' : post.photoURL);
       print("Adding post: ${post.toString()}");
-      await db.collection('posts').doc(post.id).set({
-        ...post.toJson(),
-        'duration': post.duration != null ? Timestamp.fromDate(post.duration!) : null,
-      });
+      await db.collection('posts').doc(post.id).set(post.toJson());
       print("Post added successfully: ${post.id}");
     } catch (e) {
       print("Error adding post: $e");

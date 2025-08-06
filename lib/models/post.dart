@@ -1,5 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:equatable/equatable.dart';
+import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
+
+class ExerciseEntry {
+  final String name;
+  final List<String> muscleGroups;
+  final int sets;
+
+  const ExerciseEntry({
+    required this.name,
+    required this.muscleGroups,
+    required this.sets,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'muscleGroups': muscleGroups,
+    'sets': sets,
+  };
+
+  factory ExerciseEntry.fromJson(Map<String, dynamic> json) => ExerciseEntry(
+    name: json['name'] as String? ?? '',
+    muscleGroups: (json['muscleGroups'] as List<dynamic>?)?.cast<String>() ?? [],
+    sets: json['sets'] as int? ?? 0,
+  );
+
+  String toDisplayString() => '$name (${muscleGroups.join(", ")}, $sets sets)';
+}
 
 class Comment {
   final String userId;
@@ -41,7 +69,7 @@ class Post {
   final String playlist;
   final String workout_type;
   Intensity intensity;
-  final List<String>? exercises;
+  final List<ExerciseEntry> exercises;
   final String userId;
   final String username;
   final List<String> likes; // Added: List of user IDs who liked the post
@@ -75,7 +103,7 @@ class Post {
     String? photoURL,
     String? playlist,
     Intensity? intensity,
-    List<String>? exercises,
+    List<ExerciseEntry>? exercises,
     List<String>? likes,
     List<Comment>? comments,
   }) {
@@ -109,8 +137,9 @@ class Post {
         playlist: json['playlist'] as String? ?? '',
         workout_type: json['workout_type'] as String? ?? '',
         intensity: _mapIntensity(json['intensity'] as String? ?? 'none'),
-        exercises: (json['exercises'] as List<dynamic>?)?.cast<String>() ??
-            (json['Exercises'] as List<dynamic>?)?.cast<String>() ??
+        exercises: (json['exercises'] as List<dynamic>?)
+            ?.map((e) => ExerciseEntry.fromJson(e as Map<String, dynamic>))
+            .toList() ??
             [],
         userId: json['userId'] as String? ?? '',
         username: json['username'] as String? ?? 'Unknown User',
@@ -135,7 +164,7 @@ class Post {
       'playlist': playlist,
       'workout_type': workout_type,
       'intensity': intensity.description,
-      'exercises': exercises,
+      'exercises': exercises.map((e) => e.toJson()).toList(),
       'userId': userId,
       'username': username,
       'likes': likes,
@@ -172,11 +201,5 @@ extension IntensityExtension on Intensity {
       case Intensity.none:
         return 'none';
     }
-  }
-}
-
-extension ListOutputExtension on List {
-  String toStringWithoutBrackets() {
-    return toString().replaceAll('[', '').replaceAll(']', '');
   }
 }

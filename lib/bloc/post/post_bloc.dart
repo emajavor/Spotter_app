@@ -15,7 +15,7 @@ part 'post_state.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
   final FirebaseRepo _firebaseRepo;
-  final List<String> _exercises = [];
+  final List<ExerciseEntry> _exercises = [];
   String _workoutType = "";
   String _location = "";
   String _playlist = "";
@@ -23,7 +23,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
   String get workoutType => _workoutType;
   String get location => _location;
-  List<String> get exercises => _exercises;
+  List<ExerciseEntry> get exercises => _exercises;
 
   PostBloc(this._firebaseRepo) : super(const PostState()) {
     on<AddWorkoutType>(_onAddWorkoutType);
@@ -92,13 +92,12 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     }
   }
 
-  FutureOr <void> _onAddExercises(AddExercises event, Emitter<PostState> emit)  {
+  FutureOr<void> _onAddExercises(AddExercises event, Emitter<PostState> emit) {
     emit(const AddingExercise());
-    _exercises.add(event.addedExercises);
-    if(_exercises.isEmpty){
+    _exercises.add(event.exerciseEntry);
+    if (_exercises.isEmpty) {
       emit(EmptyExercises());
-    }
-    else {
+    } else {
       emit(AddedExercises(_exercises));
     }
   }

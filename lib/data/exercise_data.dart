@@ -1,19 +1,18 @@
 class Exercise {
   final String name;
-  final String muscleGroup;
-
-  Exercise({required this.name, required this.muscleGroup});
+  final List<String> muscleGroups;
+  Exercise({required this.name, required this.muscleGroups});
 }
 
 final List<Exercise> allExercises = [
-  Exercise(name: 'Chest Press', muscleGroup: 'Chest'),
-  Exercise(name: 'Bench Press', muscleGroup: 'Chest'),
-  Exercise(name: 'Incline Dumbbell Press', muscleGroup: 'Chest'),
-  Exercise(name: 'Lat Pulldown', muscleGroup: 'Back'),
-  Exercise(name: 'Deadlift', muscleGroup: 'Back'),
-  Exercise(name: 'Squat', muscleGroup: 'Legs'),
-  Exercise(name: 'Leg Press', muscleGroup: 'Legs'),
-  Exercise(name: 'Bicep Curl', muscleGroup: 'Biceps'),
-  Exercise(name: 'Tricep Extension', muscleGroup: 'Triceps'),
-  // Add more as needed
+  Exercise(name: 'Chest Press', muscleGroups: ['Chest']),
+  Exercise(name: 'Bench Press', muscleGroups: ['Chest']),
+  Exercise(name: 'Incline Dumbbell Press', muscleGroups: ['Chest']),
+  Exercise(name: 'Lat Pulldown', muscleGroups: ['Back']),
+  Exercise(name: 'Romanian Deadlift', muscleGroups: ['Back', 'Hamstrings', 'Glutes']),
+  Exercise(name: 'Squat', muscleGroups: ['Quads', 'Hamstrings', 'Glutes']),
+  Exercise(name: 'Leg Press', muscleGroups: ['Quads', 'Hamstrings']),
+  Exercise(name: 'Bicep Curl', muscleGroups: ['Biceps']),
+  Exercise(name: 'Tricep Extension', muscleGroups: ['Triceps']),
+  Exercise(name: 'Calves Extension', muscleGroups: ['Calves']),
 ];
