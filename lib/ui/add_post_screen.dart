@@ -9,10 +9,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:spotter_app/data/exercise_data.dart';
 import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:dropdown_search/dropdown_search.dart';
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
 import '../repository/firebase_repo_implementation.dart';
@@ -27,7 +28,7 @@ class AddPostScreen extends StatefulWidget {
 class _AddPostScreenState extends State<AddPostScreen> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  final exerciseController = TextEditingController();
+  //final exerciseController = TextEditingController();
   final workoutTypeController = TextEditingController();
   final muscleGroupController = TextEditingController();
   final locationController = TextEditingController();
@@ -42,7 +43,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
   String? _muscleGroup;
-  final Map<String,int> _weeklyTotals = {};
+  Map<String, int> _weeklyTotals = {}; // Track sets by muscle group
+  Exercise? selectedExercise; // Store selected exercise object
+  int selectedSets = 1;
 
 
   @override
@@ -55,7 +58,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   void dispose() {
-    exerciseController.dispose();
+    //exerciseController.dispose();
     workoutTypeController.dispose();
     muscleGroupController.dispose();
     locationController.dispose();
@@ -289,22 +292,43 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 16),
-                      child: TextField(
-                        controller: exerciseController,
-                        decoration: InputDecoration(
+                      child: DropdownSearch<Exercise>(
+                      popupProps: PopupProps.menu(
+                        showSearchBox: true,
+                        searchFieldProps: TextFieldProps(
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            hintText: 'Search for an exercise',
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      items: allExercises,
+                      itemAsString: (Exercise exercise) => exercise.name,
+                      onChanged: (Exercise? exercise) {
+                        setState(() {
+                          selectedExercise = exercise;
+                        });
+                      },
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          hintText: 'Enter an exercise',
+                          hintText: 'Select an exercise',
                           prefixIcon: Icon(
                             Icons.dashboard_customize,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        style: GoogleFonts.poppins(
-                            color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
+    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                       child: TextField(
@@ -328,9 +352,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         padding: const EdgeInsets.only(bottom: 15.0),
                         child: ElevatedButton(
                           onPressed: () async {
-                            final exercise = exerciseController.text.trim();
-                            final setsText = _setsController.text.trim();
-                            if (exercise.isEmpty || setsText.isEmpty) return;
+                            if (selectedExercise == null || _setsController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please select an exercise and enter sets')),
+                              );
+                              return;
+                            }
 
                             if (!_mlReady) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -339,11 +366,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
                               return;
                             }
 
-                            final setsToAdd = int.tryParse(setsText) ?? 0;
-                            final soFar      = _weeklyTotals[exercise] ?? 0;
+                            final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
+                            final muscleGroup = selectedExercise!.muscleGroup;
+                            final soFar = _weeklyTotals[muscleGroup] ?? 0;
 
                             final pred = await _mlModel.predict(
-                              muscle: exercise,
+                              muscle: muscleGroup,
                               soFar: soFar,
                               toAdd: setsToAdd,
                             );
@@ -351,7 +379,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             final label  = labels[pred];
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('This is $label for $exercise')),
+                              SnackBar(content: Text('This is $label for $muscleGroup'),),
                             );
 
                             if (pred == 2) {
@@ -361,16 +389,20 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
                             // Passed ML check: dispatch to bloc
                             context.read<PostBloc>().add(
-                              AddExercises(addedExercises: exercise),
+                              AddExercises(
+                                addedExercises:
+                                '${selectedExercise!.name} (${muscleGroup}, $setsToAdd sets)',
+                              ),
                             );
 
-                            // Update your weekly total
+                            // Update weekly total for the muscle group
                             setState(() {
-                              _weeklyTotals[exercise] = soFar + setsToAdd;
-                            });
+                              _weeklyTotals[muscleGroup] = soFar + setsToAdd;                            });
 
-                            exerciseController.clear();
                             _setsController.clear();
+                            setState(() {
+                              selectedExercise = null;
+                            });
                           },
 
                           style: ElevatedButton.styleFrom(

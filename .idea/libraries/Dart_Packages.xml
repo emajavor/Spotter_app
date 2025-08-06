@@ -233,6 +233,13 @@
             </list>
           </value>
         </entry>
+        <entry key="dropdown_search">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/dropdown_search-5.0.6/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="dtd">
           <value>
             <list>
@@ -1448,6 +1455,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/dds-5.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/dds_service_extensions-2.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/devtools_shared-11.2.0/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/dropdown_search-5.0.6/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/dtd-2.4.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/dwds-24.3.2/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/equatable-2.0.7/lib" />

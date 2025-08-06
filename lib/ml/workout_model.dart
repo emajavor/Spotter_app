@@ -15,7 +15,6 @@ class WorkoutModel {
       // ..useNnApiForAndroid = true  // if you want NNAPI delegate
       // ..addDelegate(GpuDelegate()) // if you want GPU delegate
     );
-    print('✅ tflite_flutter model loaded');
   }
 
   /// Predict 0=undertrained,1=balanced,2=overtrained
