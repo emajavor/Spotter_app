@@ -55,6 +55,7 @@ dependencies:
   shared_preferences: ^2.3.0
   tflite_flutter: ^0.10.3
   dropdown_search: ^5.0.6
+  fl_chart: ^0.64.0
 
 dev_dependencies:
   flutter_test:

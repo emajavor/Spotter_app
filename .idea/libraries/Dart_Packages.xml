@@ -395,6 +395,13 @@
             </list>
           </value>
         </entry>
+        <entry key="fl_chart">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/fl_chart-0.64.0/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flex_color_scheme">
           <value>
             <list>
@@ -1479,6 +1486,7 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_storage_platform_interface-5.1.22/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_storage_web-3.9.7/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fixnum-1.1.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/fl_chart-0.64.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flex_color_scheme-7.3.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flex_seed_scheme-1.5.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_bloc-8.1.6/lib" />

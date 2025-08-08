@@ -8,6 +8,7 @@ abstract class IFirebaseRepo {
   Future<List<Post>> getAll();
 
   Future<void> updateField(String documentId, String newIntensity);
+  Future<List<Post>> getUserPostsInLastWeek(String userId);
   Future<Post?> getPost(String id);
   Future<void> addPost(Post addedPost);
   Future<String?> uploadImage(XFile image);

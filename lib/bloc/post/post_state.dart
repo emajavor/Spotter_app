@@ -206,3 +206,21 @@ class AddingImage extends PostState {
 
 //TODO create failed fetching state with error message attribute
 
+class FetchingWeeklyTotals extends PostState {
+  const FetchingWeeklyTotals();
+}
+
+class FetchedWeeklyTotals extends PostState {
+  final Map<String, int> muscleSets;
+  final Map<String, String> muscleStatus;
+  const FetchedWeeklyTotals(this.muscleSets, this.muscleStatus);
+  @override
+  List<Object> get props => [muscleSets, muscleStatus];
+}
+
+class FailedWeeklyTotals extends PostState {
+  final String error;
+  const FailedWeeklyTotals(this.error);
+  @override
+  List<Object> get props => [error];
+}

@@ -110,3 +110,10 @@ class AddComment extends PostEvent {
   @override
   List<Object?> get props => [postId, comment];
 }
+
+class GetWeeklyTotals extends PostEvent {
+  final String userId;
+  const GetWeeklyTotals(this.userId);
+  @override
+  List<Object> get props => [userId];
+}

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,7 +13,7 @@ import 'package:spotter_app/data/exercise_data.dart';
 import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:dropdown_search/dropdown_search.dart';
+
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
 import '../repository/firebase_repo_implementation.dart';
@@ -25,8 +26,7 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
-
-  //final exerciseController = TextEditingController();
+  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
   final workoutTypeController = TextEditingController();
   final locationController = TextEditingController();
   final playlistController = TextEditingController();
@@ -39,10 +39,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-  Map<String, int> _weeklyTotals = {}; // Track sets by muscle group
   Exercise? selectedExercise; // Store selected exercise object
   int selectedSets = 1;
-
+  String? userId;
+  String? username;
 
   @override
   void initState() {
@@ -50,11 +50,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
     _mlModel.init().then((_) {
       setState(() => _mlReady = true);
     });
+    userId = _auth.currentUser?.uid;
+    username = _auth.currentUser?.displayName ?? 'Unknown User';
   }
 
   @override
   void dispose() {
-    //exerciseController.dispose();
     workoutTypeController.dispose();
     locationController.dispose();
     playlistController.dispose();
@@ -205,7 +206,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/start',
-                  (route) => false,
+              (route) => false,
               arguments: {'initialIndex': 2},
             );
           }
@@ -231,45 +232,249 @@ class _AddPostScreenState extends State<AddPostScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
+                controller: _scrollController,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Add exercises:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              'Add exercises:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          BlocBuilder<PostBloc, PostState>(
+                            buildWhen: (prev, curr) =>
+                                curr is AddedExercises ||
+                                curr is EmptyExercises ||
+                                curr is AddingExercise,
+                            builder: (context, state) {
+                              print("state in AddedScreen is $state");
+                              if (state is AddedExercises) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: state.exercises
+                                      .map((exercise) => Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 20, vertical: 8),
+                                            child: Text(
+                                              exercise.toDisplayString(),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                              ),
+                                            ),
+                                          ))
+                                      .toList(),
+                                );
+                              }
+                              return Container();
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 16),
+                            child: DropdownSearch<Exercise>(
+                              popupProps: PopupProps.menu(
+                                showSearchBox: true,
+                                searchFieldProps: TextFieldProps(
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    hintText: 'Search for an exercise',
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              items: allExercises,
+                              itemAsString: (Exercise exercise) =>
+                                  exercise.name,
+                              onChanged: (Exercise? exercise) {
+                                setState(() {
+                                  selectedExercise = exercise;
+                                });
+                              },
+                              dropdownDecoratorProps: DropDownDecoratorProps(
+                                dropdownSearchDecoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  hintText: 'Select an exercise',
+                                  prefixIcon: Icon(
+                                    Icons.dashboard_customize,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                            child: TextField(
+                              controller: _setsController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                hintText: 'Enter number of sets',
+                                prefixIcon: Icon(
+                                  Icons.repeat,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                              style: GoogleFonts.poppins(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 15.0),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if (selectedExercise == null || _setsController.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Please select an exercise and enter sets')),
+                                    );
+                                    return;
+                                  }
+
+                                  if (!_mlReady) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Model loading, please wait…')),
+                                    );
+                                    return;
+                                  }
+
+                                  final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
+                                  final muscleGroups = selectedExercise!.muscleGroups;
+                                  bool isOvertrained = false;
+                                  List<String> statusMessages = [];
+
+                                  for (final muscleGroup in muscleGroups) {
+                                    final pred = await _mlModel.predict(
+                                      muscle: muscleGroup,
+                                      soFar: 0, // Per-session prediction, no weekly totals
+                                      toAdd: setsToAdd,
+                                    );
+                                    final labels = ['undertrained', 'balanced', 'overtrained'];
+                                    final label = labels[pred];
+                                    statusMessages.add('$muscleGroup: $label');
+                                    if (pred == 2) isOvertrained = true;
+                                  }
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(statusMessages.join(', ')),
+                                    ),
+                                  );
+
+                                  if (isOvertrained) {
+                                    // Stop if any muscle group is overtrained
+                                    return;
+                                  }
+
+                                  // Passed ML check: dispatch to bloc
+                                  context.read<PostBloc>().add(
+                                    AddExercises(
+                                      exerciseEntry: ExerciseEntry(
+                                        name: selectedExercise!.name,
+                                        muscleGroups: selectedExercise!.muscleGroups,
+                                        sets: setsToAdd,
+                                      ),
+                                    ),
+                                  );
+
+                                  _setsController.clear();
+                                  setState(() {
+                                    selectedExercise = null;
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  'ADD EXERCISE',
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
                       ),
                     ),
-                    BlocBuilder<PostBloc, PostState>(
-                      buildWhen: (prev, curr) =>
-                          curr is AddedExercises ||
-                          curr is EmptyExercises ||
-                          curr is AddingExercise,
-                      builder: (context, state) {
-                        print("state in AddedScreen is $state");
-                        if (state is AddedExercises) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: state.exercises
-                                .map((exercise) => Padding(
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              'Workout type:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          BlocBuilder<PostBloc, PostState>(
+                            buildWhen: (prev, curr) =>
+                                curr is AddedWorkoutType ||
+                                curr is AddingWorkoutType ||
+                                curr is EmptyWorkoutType,
+                            builder: (context, state) {
+                              String? workoutType;
+                              if (state is AddedWorkoutType) {
+                                workoutType = state.addedWorkoutType;
+                              } // Spremi vrijednost iz Bloca
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (workoutType != null)
+                                    Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 8),
+                                          horizontal: 20.0, vertical: 15.0),
                                       child: Text(
-                                        exercise.toDisplayString(),
+                                        workoutType,
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           color: Theme.of(context)
@@ -277,304 +482,607 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                               .onSurface,
                                         ),
                                       ),
-                                    ))
-                                .toList(),
-                          );
-                        }
-                        return Container();
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 16),
-                      child: DropdownSearch<Exercise>(
-                      popupProps: PopupProps.menu(
-                        showSearchBox: true,
-                        searchFieldProps: TextFieldProps(
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            hintText: 'Search for an exercise',
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      items: allExercises,
-                      itemAsString: (Exercise exercise) => exercise.name,
-                      onChanged: (Exercise? exercise) {
-                        setState(() {
-                          selectedExercise = exercise;
-                        });
-                      },
-                      dropdownDecoratorProps: DropDownDecoratorProps(
-                        dropdownSearchDecoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          hintText: 'Select an exercise',
-                          prefixIcon: Icon(
-                            Icons.dashboard_customize,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      child: TextField(
-                        controller: _setsController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          hintText: 'Enter number of sets',
-                          prefixIcon: Icon(
-                            Icons.repeat,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 15.0),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (selectedExercise == null || _setsController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please select an exercise and enter sets')),
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 16),
+                                    child: TextField(
+                                      controller: workoutTypeController,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        hintText: 'Enter workout type',
+                                        prefixIcon: Icon(Icons.fitness_center,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                      ),
+                                      style: GoogleFonts.poppins(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
+                                    ),
+                                  ),
+                                  Center(
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 15),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (workoutTypeController
+                                              .text.isNotEmpty) {
+                                            context.read<PostBloc>().add(
+                                                AddWorkoutType(
+                                                    addedWorkoutType:
+                                                        workoutTypeController
+                                                            .text));
+                                            workoutTypeController.clear();
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16)),
+                                        ),
+                                        child: Text(
+                                          workoutType == null ? 'SAVE' : 'EDIT',
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
-                              return;
-                            }
-
-                            if (!_mlReady) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Model loading, please wait…')),
-                              );
-                              return;
-                            }
-
-                            final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
-                            final muscleGroups = selectedExercise!.muscleGroups;
-                            bool isOvertrained = false;
-                            List<String> statusMessages = [];
-
-
-                            for (final muscleGroup in muscleGroups) {
-                              final soFar = _weeklyTotals[muscleGroup] ?? 0;
-                              final pred = await _mlModel.predict(
-                                muscle: muscleGroup,
-                                soFar: soFar,
-                                toAdd: setsToAdd,
-                              );
-                              final labels = ['undertrained', 'balanced', 'overtrained'];
-                              final label = labels[pred];
-                              statusMessages.add('$muscleGroup: $label');
-                              if (pred == 2) isOvertrained = true;
-                            }
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(statusMessages.join(', ')),
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15)),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              'Date & Time:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
-                            );
-
-                            if (isOvertrained) {
-                              // Stop if any muscle group is overtrained
-                              return;
-                            }
-
-                            // Passed ML check: dispatch to bloc
-                            context.read<PostBloc>().add(
-                              AddExercises(
-                                exerciseEntry: ExerciseEntry(
-                                  name: selectedExercise!.name,
-                                  muscleGroups: selectedExercise!.muscleGroups,
-                                  sets: setsToAdd,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
+                            child: Text(
+                              selectedDate != null
+                                  ? '${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year} ${selectedDate!.hour}:${selectedDate!.minute}'
+                                  : 'Not selected',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 15),
+                              child: ElevatedButton(
+                                onPressed: addDateTime,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
                                 ),
-                              ),
-                            );
-
-                            // Update weekly totals for all muscle groups
-                            setState(() {
-                              for (final muscleGroup in muscleGroups) {
-                                _weeklyTotals[muscleGroup] =
-                                    (_weeklyTotals[muscleGroup] ?? 0) + setsToAdd;
-                              }
-                            });
-                            _setsController.clear();
-                            setState(() {
-                              selectedExercise = null;
-                            });
-                          },
-
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'ADD EXERCISE',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Workout type:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    BlocBuilder<PostBloc, PostState>(
-                      buildWhen: (prev, curr) =>
-                          curr is AddedWorkoutType ||
-                          curr is AddingWorkoutType ||
-                          curr is EmptyWorkoutType,
-                      builder: (context, state) {
-                        String? workoutType;
-                        if (state is AddedWorkoutType) {
-                          workoutType = state.addedWorkoutType;
-                        } // Spremi vrijednost iz Bloca
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (workoutType != null)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20.0, vertical: 15.0),
                                 child: Text(
-                                  workoutType,
+                                  selectedDate == null ? 'SELECT' : 'EDIT',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                  ),
+                                      fontWeight: FontWeight.w600),
                                 ),
-                              ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 16),
-                              child: TextField(
-                                controller: workoutTypeController,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  hintText: 'Enter workout type',
-                                  prefixIcon: Icon(Icons.fitness_center,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
-                                ),
-                                style: GoogleFonts.poppins(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface),
                               ),
                             ),
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 15),
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    if (workoutTypeController.text.isNotEmpty) {
-                                      context.read<PostBloc>().add(
-                                          AddWorkoutType(
-                                              addedWorkoutType:
-                                                  workoutTypeController.text));
-                                      workoutTypeController.clear();
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    foregroundColor:
-                                        Theme.of(context).colorScheme.onPrimary,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
-                                  ),
-                                  child: Text(
-                                    workoutType == null ? 'SAVE' : 'EDIT',
-                                    style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              'Location:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
+                            ),
+                          ),
+                          BlocBuilder<PostBloc, PostState>(
+                              bloc: BlocProvider.of<PostBloc>(context),
+                              buildWhen: (prev, curr) =>
+                                  curr is AddedLocation ||
+                                  curr is AddingLocation ||
+                                  curr is EmptyLocation,
+                              builder: (context, state) {
+                                String? location;
+                                if (state is AddedLocation) {
+                                  location = state.addedLocation;
+                                }
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (location != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20.0, vertical: 15.0),
+                                        child: Text(
+                                          location,
+                                          style: GoogleFonts.poppins(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface),
+                                        ),
+                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 16),
+                                      child: TextField(
+                                        controller: locationController,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          hintText: 'Enter your location',
+                                          prefixIcon: Icon(
+                                            Icons.location_on,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        ),
+                                        style: GoogleFonts.poppins(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface),
+                                      ),
+                                    ),
+                                    Center(
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 15.0),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            if (locationController
+                                                .text.isNotEmpty) {
+                                              context.read<PostBloc>().add(
+                                                  AddLocation(
+                                                      addedLocation:
+                                                          locationController
+                                                              .text));
+                                              locationController.clear();
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            foregroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            location == null ? 'SAVE' : 'EDIT',
+                                            style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
+                        ],
+                      ),
+                    ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              'Workout playlist:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          BlocBuilder<PostBloc, PostState>(
+                            bloc: BlocProvider.of<PostBloc>(context),
+                            buildWhen: (prev, curr) =>
+                                curr is AddedPlaylist ||
+                                curr is AddingPlaylist ||
+                                curr is EmptyPlaylist,
+                            builder: (context, state) {
+                              String? playlist;
+                              if (state is AddedPlaylist) {
+                                playlist = state.addedPlaylist;
+                              } // Spremi vrijednost iz Bloca
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (playlist != null)
+                                    InkWell(
+                                      onTap: () async {
+                                        final url = Uri.parse(playlist!);
+                                        if (await canLaunchUrl(url)) {
+                                          await launchUrl(url);
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20.0, vertical: 15.0),
+                                        child: Text(
+                                          playlist,
+                                          style: GoogleFonts.poppins(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 16),
+                                    child: TextField(
+                                      controller: playlistController,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        hintText: 'Paste your playlist link',
+                                        prefixIcon: Icon(Icons.music_note,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                      ),
+                                      style: GoogleFonts.poppins(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface),
+                                    ),
+                                  ),
+                                  Center(
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 15),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (playlistController
+                                              .text.isNotEmpty) {
+                                            context.read<PostBloc>().add(
+                                                AddPlaylist(
+                                                    addedPlaylist:
+                                                        playlistController
+                                                            .text));
+                                            playlistController.clear();
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16)),
+                                        ),
+                                        child: Text(
+                                          playlist == null ? 'SAVE' : 'EDIT',
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      color: Theme.of(context).colorScheme.surface,
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildIntensityItem(Intensity.Easy),
+                                _buildIntensityItem(Intensity.Intermediate),
+                                _buildIntensityItem(Intensity.Hard),
+                              ],
                             ),
                           ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15)),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Date & Time:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      child: Text(
-                        selectedDate != null
-                            ? '${selectedDate!.day}.${selectedDate!.month}.${selectedDate!.year} ${selectedDate!.hour}:${selectedDate!.minute}'
-                            : 'Not selected',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20, left: 10),
+                            child: Text(
+                              textAlign: TextAlign.left,
+                              'Add photo:',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          BlocBuilder<PostBloc, PostState>(
+                            bloc: BlocProvider.of<PostBloc>(context),
+                            buildWhen: (prev, curr) =>
+                                curr is AddedImage ||
+                                curr is EmptyImage ||
+                                curr is AddingImage,
+                            builder: (context, state) {
+                              print("state in AddedScreen is $state");
+                              if (state is AddedImage && _image != null) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                      File(_image!.path),
+                                      height: 200,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          height: 200,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.broken_image,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .error,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
+                              return Container(
+                                height: 200,
+                                color: Theme.of(context).colorScheme.surface,
+                                child: Center(
+                                  child: Text(
+                                    'No image selected',
+                                    style: GoogleFonts.poppins(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          Center(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 20.0),
+                              child: ElevatedButton(
+                                onPressed: addPhoto,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        width: 1),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20.0, vertical: 15.0),
+                                ),
+                                child: Text(
+                                  'CHOOSE PHOTO',
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         child: ElevatedButton(
-                          onPressed: addDateTime,
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  setState(() => _isLoading = true);
+                                  final postBloc = context.read<PostBloc>();
+                                  final userId = firebase_auth
+                                      .FirebaseAuth.instance.currentUser?.uid;
+                                  if (userId == null) {
+                                    setState(() => _isLoading = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'You have to be signed in!',
+                                          style: GoogleFonts.poppins(),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  final user = await context
+                                      .read<FirebaseRepo>()
+                                      .getUser(userId);
+                                  final username = user?.username ?? 'User';
+                                  if (postBloc.workoutType.isEmpty) {
+                                    setState(() => _isLoading = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Add workout type!',
+                                          style: GoogleFonts.poppins(),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (postBloc.location.isEmpty) {
+                                    setState(() => _isLoading = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Add your location!',
+                                          style: GoogleFonts.poppins(),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  if (postBloc.exercises.isEmpty) {
+                                    setState(() => _isLoading = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Add at least one exercise!',
+                                          style: GoogleFonts.poppins(),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  String photoURL = '';
+                                  if (_image != null) {
+                                    try {
+                                      photoURL = await context
+                                              .read<FirebaseRepo>()
+                                              .uploadImage(_image!) ??
+                                          '';
+                                    } catch (e) {
+                                      print('Failed to upload image: $e');
+                                    }
+                                  }
+                                  try {
+                                    final post = Post(
+                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                      date: selectedDate ?? DateTime.now(),
+                                      location: postBloc.location,
+                                      photoURL: photoURL,
+                                      playlist: playlistController.text,
+                                      workout_type: postBloc.workoutType,
+                                      intensity:
+                                          selectedIntensity ?? Intensity.Easy,
+                                      exercises: postBloc.exercises,
+                                      userId: userId,
+                                      username: username,
+                                      likes: [],
+                                      comments: [],
+                                    );
+                                    context
+                                        .read<PostBloc>()
+                                        .add(AddPost(addedPost: post));
+                                    await Future.delayed(
+                                        const Duration(milliseconds: 500));
+                                    setState(() => _isLoading = false);
+                                  } catch (e) {
+                                    setState(() => _isLoading = false);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Error creating post: $e',
+                                          style: GoogleFonts.poppins(),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                      ),
+                                    );
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
@@ -582,347 +1090,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 Theme.of(context).colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: Text(
-                            selectedDate == null ? 'SELECT' : 'EDIT',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Location:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    BlocBuilder<PostBloc, PostState>(
-                        bloc: BlocProvider.of<PostBloc>(context),
-                        buildWhen: (prev, curr) =>
-                            curr is AddedLocation ||
-                            curr is AddingLocation ||
-                            curr is EmptyLocation,
-                        builder: (context, state) {
-                          String? location;
-                          if (state is AddedLocation) {
-                            location = state.addedLocation;
-                          }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (location != null)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20.0, vertical: 15.0),
-                                  child: Text(
-                                    location,
-                                    style: GoogleFonts.poppins(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface),
-                                  ),
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 16),
-                                child: TextField(
-                                  controller: locationController,
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    hintText: 'Enter your location',
-                                    prefixIcon: Icon(
-                                      Icons.location_on,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                  style: GoogleFonts.poppins(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface),
-                                ),
-                              ),
-                              Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 15.0),
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      if (locationController.text.isNotEmpty) {
-                                        context.read<PostBloc>().add(
-                                            AddLocation(
-                                                addedLocation:
-                                                    locationController.text));
-                                        locationController.clear();
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      foregroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      location == null ? 'SAVE' : 'EDIT',
-                                      style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        'Workout playlist:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    BlocBuilder<PostBloc, PostState>(
-                      bloc: BlocProvider.of<PostBloc>(context),
-                      buildWhen: (prev, curr) =>
-                          curr is AddedPlaylist ||
-                          curr is AddingPlaylist ||
-                          curr is EmptyPlaylist,
-                      builder: (context, state) {
-                        String? playlist;
-                        if (state is AddedPlaylist) {
-                          playlist = state.addedPlaylist;
-                        } // Spremi vrijednost iz Bloca
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (playlist != null)
-                              InkWell(
-                                onTap: () async {
-                                  final url = Uri.parse(playlist!);
-                                  if (await canLaunchUrl(url)) {
-                                    await launchUrl(url);
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20.0, vertical: 15.0),
-                                  child: Text(
-                                    playlist,
-                                    style: GoogleFonts.poppins(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 16),
-                              child: TextField(
-                                controller: playlistController,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  hintText: 'Paste your playlist link',
-                                  prefixIcon: Icon(Icons.music_note,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
-                                ),
-                                style: GoogleFonts.poppins(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface),
-                              ),
-                            ),
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 15),
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    if (playlistController.text.isNotEmpty) {
-                                      context.read<PostBloc>().add(AddPlaylist(
-                                          addedPlaylist:
-                                              playlistController.text));
-                                      playlistController.clear();
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    foregroundColor:
-                                        Theme.of(context).colorScheme.onPrimary,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
-                                  ),
-                                  child: Text(
-                                    playlist == null ? 'SAVE' : 'EDIT',
-                                    style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                color: Theme.of(context).colorScheme.surface,
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildIntensityItem(Intensity.Easy),
-                          _buildIntensityItem(Intensity.Intermediate),
-                          _buildIntensityItem(Intensity.Hard),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 10),
-                      child: Text(
-                        textAlign: TextAlign.left,
-                        'Add photo:',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    BlocBuilder<PostBloc, PostState>(
-                      bloc: BlocProvider.of<PostBloc>(context),
-                      buildWhen: (prev, curr) =>
-                          curr is AddedImage ||
-                          curr is EmptyImage ||
-                          curr is AddingImage,
-                      builder: (context, state) {
-                        print("state in AddedScreen is $state");
-                        if (state is AddedImage && _image != null) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(_image!.path),
-                                height: 200,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    height: 200,
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        color:
-                                            Theme.of(context).colorScheme.error,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        }
-                        return Container(
-                          height: 200,
-                          color: Theme.of(context).colorScheme.surface,
-                          child: Center(
-                            child: Text(
-                              'No image selected',
-                              style: GoogleFonts.poppins(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20.0),
-                        child: ElevatedButton(
-                          onPressed: addPhoto,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  width: 1),
-                            ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20.0, vertical: 15.0),
+                                horizontal: 20, vertical: 15),
                           ),
                           child: Text(
-                            'CHOOSE PHOTO',
+                            'ADD POST',
                             style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600),
                           ),
@@ -932,137 +1104,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              const SizedBox(height: 16),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                      setState(() => _isLoading = true);
-                      final postBloc = context.read<PostBloc>();
-                      final userId = firebase_auth
-                          .FirebaseAuth.instance.currentUser?.uid;
-                      if (userId == null) {
-                        setState(() => _isLoading = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'You have to be signed in!',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor:
-                            Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                        return;
-                      }
-                      final user = await context
-                          .read<FirebaseRepo>()
-                          .getUser(userId);
-                      final username = user?.username ?? 'User';
-                      if (postBloc.workoutType.isEmpty) {
-                        setState(() => _isLoading = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Add workout type!',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor:
-                            Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                        return;
-                      }
-                      if (postBloc.location.isEmpty) {
-                        setState(() => _isLoading = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Add your location!',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor:
-                            Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                        return;
-                      }
-                      if (postBloc.exercises.isEmpty) {
-                        setState(() => _isLoading = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Add at least one exercise!',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor:
-                            Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                        return;
-                      }
-                      String photoURL = '';
-                      if (_image != null) {
-                        try {
-                          photoURL = await context.read<FirebaseRepo>().uploadImage(_image!) ?? '';
-                        } catch (e) {
-                          print('Failed to upload image: $e');
-                        }
-                      }
-                      try {
-                        final post = Post(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          duration: selectedDate ?? DateTime.now(),
-                          location: postBloc.location,
-                          photoURL: photoURL,
-                          playlist: playlistController.text,
-                          workout_type: postBloc.workoutType,
-                          intensity: selectedIntensity ?? Intensity.Easy,
-                          exercises: postBloc.exercises,
-                          userId: userId,
-                          username: username,
-                          likes: [],
-                          comments: [],
-                        );
-                        context.read<PostBloc>().add(AddPost(addedPost: post));
-                        await Future.delayed(const Duration(milliseconds: 500));
-                        setState(() => _isLoading = false);
-                      } catch (e) {
-                        setState(() => _isLoading = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Error creating post: $e',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            backgroundColor:
-                            Theme.of(context).colorScheme.error,
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                    ),
-                    child: Text(
-                      'ADD POST',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

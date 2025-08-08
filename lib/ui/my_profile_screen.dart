@@ -5,13 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/ui/profile_settings_screen.dart';
+import 'package:spotter_app/ui/weekly_progress_screen.dart';
 import 'package:spotter_app/ui/workout_detail_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../bloc/auth/auth_bloc.dart';
 import '../models/post.dart';
 import '../models/user.dart' as app_user;
 import '../repository/firebase_repo_implementation.dart';
-import 'add_post_screen.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -124,6 +124,15 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const WeeklyProgressScreen()),
+                              );
+                            },
+                            child: Text('View Weekly Progress', style: GoogleFonts.poppins()),
                           ),
                         ],
                       );
@@ -359,8 +368,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                       ),
                                       const SizedBox(width: 5),
                                       Text(
-                                        post.duration != null
-                                            ? '${post.duration?.day}.${post.duration?.month}.${post.duration?.year} ${post.duration?.hour}:${post.duration?.minute}'
+                                        post.date != null
+                                            ? '${post.date?.day}.${post.date?.month}.${post.date?.year} ${post.date?.hour}:${post.date?.minute}'
                                             : 'N/A',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,

@@ -4,8 +4,6 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +47,66 @@ class FirebaseRepo implements IFirebaseRepo {
         return cached;
       }
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<Post>> getUserPostsInLastWeek(String userId) async {
+    try {
+      final now = DateTime.now();
+      final oneWeekAgo = now.subtract(const Duration(days: 7));
+      print("Fetching posts for user $userId from $oneWeekAgo to $now");
+
+      // Fetch posts without date filter to debug
+      final allUserPosts = await db
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .get(const GetOptions(source: Source.serverAndCache));
+      final allPosts = allUserPosts.docs
+          .map((doc) {
+        final data = doc.data();
+        print("Raw Firestore data for post ${doc.id}: $data");
+        final post = Post.fromJson(data);
+        print("Parsed post: ${post.id}, date: ${post.date}, exercises: ${post.exercises.map((e) => e.toDisplayString()).toList()}");
+        return post;
+      })
+          .toList();
+      print("Fetched ${allPosts.length} posts for user $userId (no date filter)");
+
+      // Apply date filter
+      final querySnapshot = await db
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
+          .get(const GetOptions(source: Source.serverAndCache));
+      final posts = querySnapshot.docs
+          .map((doc) {
+        final data = doc.data();
+        print("Raw Firestore data for filtered post ${doc.id}: $data");
+        final post = Post.fromJson(data);
+        print("Filtered post: ${post.id}, date: ${post.date}, exercises: ${post.exercises.map((e) => e.toDisplayString()).toList()}");
+        return post;
+      })
+          .toList();
+      print("Fetched ${posts.length} posts for user $userId in last 7 days");
+      return posts;
+    } catch (e) {
+      print("Error fetching user posts: $e");
+      final prefs = await SharedPreferences.getInstance();
+      final cachedPosts = prefs.getString('cached_posts');
+      if (cachedPosts != null) {
+        final List<dynamic> decoded = jsonDecode(cachedPosts);
+        final cached = decoded
+            .map((e) => Post.fromJson(e))
+            .where((post) =>
+        post.userId == userId &&
+            post.date != null &&
+            post.date!.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+            .toList();
+        print("Returning ${cached.length} cached posts for user $userId");
+        return cached;
+      }
+      return [];
     }
   }
 
@@ -202,3 +260,4 @@ class FirebaseRepo implements IFirebaseRepo {
     }
   }
 }
+

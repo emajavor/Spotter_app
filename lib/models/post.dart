@@ -1,6 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:equatable/equatable.dart';
-import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 
 class ExerciseEntry {
@@ -63,7 +61,7 @@ class Comment {
 
 class Post {
   final String id;
-  final DateTime? duration;
+  final DateTime? date;
   final String location;
   final String photoURL;
   final String playlist;
@@ -75,12 +73,12 @@ class Post {
   final List<String> likes; // Added: List of user IDs who liked the post
   final List<Comment> comments; // Added: List of comments  @override
   String toString() {
-    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, location: $location, duration: $duration, photoURL: $photoURL, likes: ${likes.length}, comments: ${comments.length})';
+    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, location: $location, date: $date, photoURL: $photoURL, likes: ${likes.length}, comments: ${comments.length})';
   }
 
   Post({
     required this.id,
-    required this.duration,
+    required this.date,
     required this.location,
     required this.photoURL,
     required this.playlist,
@@ -99,7 +97,7 @@ class Post {
     String? username,
     String? workout_type,
     String? location,
-    DateTime? duration,
+    DateTime? date,
     String? photoURL,
     String? playlist,
     Intensity? intensity,
@@ -113,7 +111,7 @@ class Post {
       username: username ?? this.username,
       workout_type: workout_type ?? this.workout_type,
       location: location ?? this.location,
-      duration: duration ?? this.duration,
+      date: date ?? this.date,
       photoURL: photoURL ?? this.photoURL,
       playlist: playlist ?? this.playlist,
       intensity: intensity ?? this.intensity,
@@ -127,11 +125,11 @@ class Post {
     try {
       return Post(
         id: json['id'] as String? ?? '',
-        duration: (json['duration'] is Timestamp)
-            ? (json['duration'] as Timestamp).toDate()
-            : json['duration'] != null
+        date: json['date'] is Timestamp
+            ? (json['date'] as Timestamp).toDate()
+            : (json['duration'] is String
             ? DateTime.parse(json['duration'] as String)
-            : null,
+            : null),
         location: json['location'] as String? ?? '',
         photoURL: json['photoURL'] as String? ?? '',
         playlist: json['playlist'] as String? ?? '',
@@ -158,7 +156,7 @@ class Post {
   Map<String, dynamic> toJson() {
     return {
       'id': id.toString(),
-      'duration': duration?.toIso8601String(),
+      'date': date != null ? Timestamp.fromDate(date!) : null,
       'location': location,
       'photoURL': photoURL,
       'playlist': playlist,

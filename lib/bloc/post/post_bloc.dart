@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 import 'package:spotter_app/models/post.dart';
+import 'package:spotter_app/utils/muscle_analyzer.dart';
 
 import '../../repository/firebase_repo_implementation.dart';
 
@@ -37,6 +37,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<GetPost>(_onGetPost);
     on<ToggleLikePost>(_onToggleLikePost);
     on<AddComment>(_onAddComment);
+    on<GetWeeklyTotals>(_onGetWeeklyTotals);
   }
 
   Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
@@ -207,6 +208,18 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       } catch (e) {
         emit(FetchingFailed(e.toString()));
       }
+    }
+  }
+
+  void _onGetWeeklyTotals(GetWeeklyTotals event, Emitter<PostState> emit) async {
+    emit(const FetchingWeeklyTotals());
+    try {
+      final posts = await _firebaseRepo.getUserPostsInLastWeek(event.userId);
+      final muscleSets = MuscleAnalyzer.calculateMuscleSets(posts);
+      final muscleStatus = MuscleAnalyzer.classifyMuscleLoad(muscleSets);
+      emit(FetchedWeeklyTotals(muscleSets, muscleStatus));
+    } catch (e) {
+      emit(FailedWeeklyTotals(e.toString()));
     }
   }
 }

@@ -146,8 +146,8 @@ class _FeedScreenState extends State<FeedScreen> {
                                           const SizedBox(width: 5),
                                           Flexible(
                                             child: Text(
-                                              post.duration != null
-                                                  ? '${post.duration?.day}.${post.duration?.month}.${post.duration?.year} ${post.duration?.hour}:${post.duration?.minute}'
+                                              post.date != null
+                                                  ? '${post.date?.day}.${post.date?.month}.${post.date?.year} ${post.date?.hour}:${post.date?.minute}'
                                                   : 'N/A',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 16,
