@@ -123,13 +123,12 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     try {
+
       return Post(
         id: json['id'] as String? ?? '',
         date: json['date'] is Timestamp
             ? (json['date'] as Timestamp).toDate()
-            : (json['duration'] is String
-            ? DateTime.parse(json['duration'] as String)
-            : null),
+            : (json['date'] is String ? DateTime.parse(json['date'] as String) : null),
         location: json['location'] as String? ?? '',
         photoURL: json['photoURL'] as String? ?? '',
         playlist: json['playlist'] as String? ?? '',
@@ -148,7 +147,7 @@ class Post {
             [],
       );
     } catch (e) {
-      print("Error parsing post: $e");
+      print("Error parsing post ${json['id']}: $e");
       rethrow;
     }
   }

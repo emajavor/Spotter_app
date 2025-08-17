@@ -1,10 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
+import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/ui/workout_detail_screen.dart';
+import '../models/user.dart' as app_user;
 
 import '../models/post.dart';
 
@@ -102,18 +105,36 @@ class _FeedScreenState extends State<FeedScreen> {
                             Row(
                               children: [
                                 ClipOval(
-                                  child: Image.network(
-                                    post.username.isNotEmpty
-                                        ? 'https://avatar.iran.liara.run/public/boy?username=${post.username}'
-                                        : 'https://avatar.iran.liara.run/public/boy?username=Unknown',
-                                    width: MediaQuery.of(context).size.width * 0.15,
-                                    height: MediaQuery.of(context).size.width * 0.15,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.error,
-                                        size: 50,
-                                        color: Theme.of(context).colorScheme.error,
+                                  child: FutureBuilder<app_user.User?>(
+                                    future: context.read<FirebaseRepo>().getUser(post.userId),
+                                    builder: (context, snapshot) {
+                                      String profilePictureUrl = 'assets/images/boy.png';
+                                      if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data != null) {
+                                        profilePictureUrl = snapshot.data!.profilePictureUrl.isNotEmpty
+                                            ? snapshot.data!.profilePictureUrl
+                                            : profilePictureUrl;
+                                      }
+                                      return profilePictureUrl.startsWith('assets/')
+                                          ? Image.asset(
+                                        profilePictureUrl,
+                                        width: MediaQuery.of(context).size.width * 0.15,
+                                        height: MediaQuery.of(context).size.width * 0.15,
+                                        fit: BoxFit.cover,
+                                      )
+                                          : CachedNetworkImage(
+                                        imageUrl: profilePictureUrl,
+                                        width: MediaQuery.of(context).size.width * 0.15,
+                                        height: MediaQuery.of(context).size.width * 0.15,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => const CircularProgressIndicator(),
+                                        errorWidget: (context, url, error) {
+                                          print('Profile image error for post ${post.id}: $error');
+                                          return Icon(
+                                            Icons.person,
+                                            size: 50,
+                                            color: Theme.of(context).colorScheme.primary,
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -121,20 +142,42 @@ class _FeedScreenState extends State<FeedScreen> {
                                 const SizedBox(width: 15),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        post.location ?? 'Unknown',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                        textAlign: TextAlign.right,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          // Username
+                                          Flexible(
+                                            child: Text(
+                                              post.username,
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                                color: Theme.of(context).colorScheme.onSurface,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                          // Location
+                                          Flexible(
+                                            child: Text(
+                                              post.location ?? 'Unknown',
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 14,
+                                                color: Theme.of(context).colorScheme.onSurface,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              textAlign: TextAlign.right,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 5),
+                                      // Alarm icon and date
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.end,
                                         children: [
@@ -147,7 +190,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                           Flexible(
                                             child: Text(
                                               post.date != null
-                                                  ? '${post.date?.day}.${post.date?.month}.${post.date?.year} ${post.date?.hour}:${post.date?.minute}'
+                                                  ? '${post.date!.day}.${post.date!.month}.${post.date!.year} ${post.date!.hour.toString().padLeft(2, '0')}:${post.date!.minute.toString().padLeft(2, '0')}'
                                                   : 'N/A',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 16,
@@ -176,7 +219,7 @@ class _FeedScreenState extends State<FeedScreen> {
                               textAlign: TextAlign.left,
                             ),
                             const SizedBox(height: 10),
-                            if (post.photoURL != null && post.photoURL!.isNotEmpty)
+                            if (post.photoURL != null && post.photoURL!.isNotEmpty && post.photoURL != '')
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
@@ -185,7 +228,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                   height: MediaQuery.of(context).size.width * 0.6,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    print('Image error for ${post.username}: $error');
+                                    print('Image error for post ${post.id} by ${post.username}: $error');
                                     return Container(
                                       color: Theme.of(context).colorScheme.surface,
                                       height: MediaQuery.of(context).size.width * 0.6,

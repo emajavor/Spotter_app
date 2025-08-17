@@ -20,33 +20,34 @@ class FirebaseRepo implements IFirebaseRepo {
 
   FirebaseRepo();
 
-  @override
   Future<List<Post>> getAll() async {
     try {
+      print("Fetching all posts from Firestore");
       final querySnapshot = await db
           .collection('posts')
           .orderBy('id', descending: true)
           .get(const GetOptions(source: Source.serverAndCache));
       final posts = querySnapshot.docs
-          .map((doc) => Post.fromJson(doc.data()))
+          .map((doc) {
+        final data = doc.data();
+        print("Raw Firestore data for post ${doc.id}: $data");
+        try {
+          final post = Post.fromJson(data);
+          print("Parsed post ${doc.id}: date=${post.date}, exercises=${post.exercises.map((e) => e.toDisplayString()).toList()}");
+          return post;
+        } catch (e) {
+          print("Failed to parse post ${doc.id}: $e");
+          return null;
+        }
+      })
+          .where((post) => post != null)
+          .cast<Post>()
           .toList();
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'cached_posts', jsonEncode(posts.map((e) => e.toJson()).toList()));
-      print("Fetched and cached ${posts.length} posts: ${posts.map((p) => p.id).toList()}");
+      print("Fetched ${posts.length} posts: ${posts.map((p) => p.id).toList()}");
       return posts;
     } catch (e) {
       print("Error fetching posts: $e");
-      final prefs = await SharedPreferences.getInstance();
-      final cachedPosts = prefs.getString('cached_posts');
-      if (cachedPosts != null) {
-        final List<dynamic> decoded = jsonDecode(cachedPosts);
-        final cached = decoded.map((e) => Post.fromJson(e)).toList();
-        print("Returning cached posts: ${cached.length}");
-        return cached;
-      }
-      rethrow;
+      return [];
     }
   }
 
@@ -190,20 +191,6 @@ class FirebaseRepo implements IFirebaseRepo {
       print("Error uploading image: $e");
       return null;
     }
-  }
-
-  static Future<XFile> compressImage(XFile image) async {
-    final bytes = await image.readAsBytes();
-    final compressed = await FlutterImageCompress.compressWithList(
-      bytes,
-      minHeight: 600,
-      minWidth: 800,
-      quality: 85,
-    );
-    final tempDir = Directory.systemTemp;
-    final tempFile = File('${tempDir.path}/compressed_${image.name}');
-    await tempFile.writeAsBytes(compressed);
-    return XFile(tempFile.path);
   }
 
   Future<void> saveUser(User user) async {

@@ -129,13 +129,13 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     try {
       final posts = await _firebaseRepo.getAll();
       print('Fetched ${posts.length} posts from Firebase: ${posts.map((p) => p.id).toList()}');
+      posts.forEach((post) => print('Post ${post.id}: date=${post.date}'));
       // Sort newest first, with fallback for non-numeric IDs
       final sortedPosts = posts
         ..sort((a, b) {
           try {
             return int.parse(b.id).compareTo(int.parse(a.id));
           } catch (e) {
-            // Fallback: If IDs aren't numeric, sort lexicographically
             return b.id.compareTo(a.id);
           }
         });
