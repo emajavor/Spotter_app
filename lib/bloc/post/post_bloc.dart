@@ -32,7 +32,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<AddExercises>(_onAddExercises);
     on<AddImage>(_onAddImage);
     on<AddPost>(_onAddPost);
-    on<UpdatePost>(_onUpdatePost);
     on<GetPosts>(_onGetPosts);
     on<GetPost>(_onGetPost);
     on<ToggleLikePost>(_onToggleLikePost);
@@ -114,16 +113,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     }
   }
 
-  void _onUpdatePost(UpdatePost event, Emitter<PostState> emit) async {
-    print('Updating post with id: ${event.id} to intensity: ${event.newIntensity}');
-    try {
-      await _firebaseRepo.updateField(event.id, event.newIntensity.description);
-      add(GetPost(id: event.id, intensity: event.newIntensity));
-    } catch (e) {
-      emit(FailedUpdatedPost(e.toString()));
-    }
-  }
-
   void _onGetPosts(GetPosts event, Emitter<PostState> emit) async {
     emit(const FetchingPosts());
     try {
@@ -149,14 +138,13 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   FutureOr<void> _onGetPost(GetPost event, Emitter<PostState> emit) async {
     try {
       Post? post = await _firebaseRepo.getPost(event.id);
-
       if (post != null) {
-        emit(UpdatedPost(post));
+        emit(FetchedPost(post));
       } else {
-        emit(const FailedUpdatedPost("No post"));
+        emit(const FailedFetchedPost("Post not found"));
       }
     } catch (e) {
-      emit(const FailedUpdatedPost("Failed to update Post"));
+      emit(FailedFetchedPost("Failed to fetch post: ${e.toString()}"));
     }
   }
 

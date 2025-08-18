@@ -58,19 +58,6 @@ class AddImage extends PostEvent{
   List<Object?> get props => [addedImage];
 }
 
-class UpdatePost extends PostEvent{
-  final String id;
-  final Intensity newIntensity;
-
-  const UpdatePost({
-    required this.id,
-    required this.newIntensity
-  });
-
-  @override
-  List<Object> get props => [id, newIntensity];
-}
-
 class GetPosts extends PostEvent{
   const GetPosts();
 

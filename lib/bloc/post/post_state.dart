@@ -47,30 +47,6 @@ class FetchingFailed extends PostState{
   List<Object> get props => [error];
 }
 
-class UpdatedPost extends PostState{
-  final Post updatedPost;
-
-  const UpdatedPost(this.updatedPost);
-
-  @override
-  List<Object> get props => [updatedPost];
-}
-
-class FailedUpdatedPost extends PostState{
-  final String message;
-
-  const FailedUpdatedPost(this.message);
-
-  @override
-  List<Object> get props => [message];
-}
-
-class UpdatingPost extends PostState{
-
-  @override
-  List<Object> get props => [];
-}
-
 class AddedPost extends PostState{
   final Post? addedPost;
 
@@ -223,4 +199,9 @@ class FailedWeeklyTotals extends PostState {
   const FailedWeeklyTotals(this.error);
   @override
   List<Object> get props => [error];
+}
+
+class FailedFetchedPost extends PostState {
+  final String error;
+  const FailedFetchedPost(this.error);
 }

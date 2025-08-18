@@ -1,5 +1,5 @@
-import 'dart:ffi';            // for Pointer
-import 'dart:typed_data';     // for Float32List
+import 'dart:ffi';
+import 'dart:typed_data';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class WorkoutModel {
@@ -12,8 +12,6 @@ class WorkoutModel {
         _modelPath,
         options: InterpreterOptions()
           ..threads = 2
-      // ..useNnApiForAndroid = true  // if you want NNAPI delegate
-      // ..addDelegate(GpuDelegate()) // if you want GPU delegate
     );
   }
 
@@ -26,7 +24,8 @@ class WorkoutModel {
     // 1) Map muscle → index (must match your Python sort order)
     const muscleGroups = [
       'Biceps','Back','Calves','Chest','Glutes',
-      'Hamstrings','Quads','Shoulder','Triceps','Abs',
+      'Hamstrings','Quads','Shoulders','Triceps','Abs','Obliques','Rear Delts',
+      'Traps',
     ];
     final idx = muscleGroups.indexOf(muscle);
     if (idx < 0) throw Exception('Unknown muscle: $muscle');

@@ -13,6 +13,7 @@ import 'package:spotter_app/data/exercise_data.dart';
 import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
@@ -65,7 +66,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     super.dispose();
   }
 
-  void addPhoto() async {
+  Future<void> addPhoto() async {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -104,16 +105,16 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 Navigator.pop(context, 'camera');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 minimumSize: const Size(80, 80),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.camera_alt,
                 size: 30,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             ElevatedButton(
@@ -121,16 +122,16 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 Navigator.pop(context, 'gallery');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 minimumSize: const Size(80, 80),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.image_search_rounded,
                 size: 30,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ],
@@ -143,29 +144,41 @@ class _AddPostScreenState extends State<AddPostScreen> {
     if (result == 'camera') {
       permissionStatus = await Permission.camera.request();
       source = ImageSource.camera;
-    } else if (result == 'gallery') {
-      permissionStatus = await Permission.photos.request();
-      source = ImageSource.gallery;
     } else {
-      return;
+      // Provjera za Android 13+ i starije verzije
+      if (Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 33) {
+        permissionStatus = await Permission.photos.request();
+      } else {
+        permissionStatus = await Permission.storage.request();
+      }
+      source = ImageSource.gallery;
     }
 
     if (permissionStatus.isGranted) {
-      final pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          _image = pickedFile;
-        });
-        //we send AddImage(addedImage: pickedFile) in PostBloc, which matches with the definition of AddImage events.
-        context.read<PostBloc>().add(AddImage(addedImage: pickedFile));
+      try {
+        final pickedFile = await _picker.pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            _image = pickedFile;
+          });
+          context.read<PostBloc>().add(AddImage(addedImage: pickedFile));
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error picking image: $e',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result == 'camera'
-                ? 'Camera permission denied'
-                : 'Photo permission denied',
+            result == 'camera' ? 'Camera permission denied' : 'Photo permission denied',
             style: GoogleFonts.poppins(),
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
