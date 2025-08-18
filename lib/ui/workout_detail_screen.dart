@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/ui/widgets/intensity_card.dart';
-import '../models/enums/intensity.dart';
 import '../models/post.dart';
 
 class WorkoutDetailScreen extends StatefulWidget {
