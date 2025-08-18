@@ -360,7 +360,6 @@ class _FeedScreenState extends State<FeedScreen> {
   void _showCommentDialog(BuildContext context, Post post) {
     final TextEditingController _commentController = TextEditingController();
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final currentUsername = FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous';
 
     showDialog(
       context: context,
@@ -382,8 +381,15 @@ class _FeedScreenState extends State<FeedScreen> {
             child: Text('Cancel', style: GoogleFonts.poppins()),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               if (_commentController.text.isNotEmpty && currentUserId != null) {
+                // Fetching username from firestore
+                final userDoc = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(currentUserId)
+                    .get();
+                final currentUsername = userDoc.data()?['username'] as String? ?? 'Anonymous';
+
                 final newComment = Comment(
                   userId: currentUserId,
                   username: currentUsername,
