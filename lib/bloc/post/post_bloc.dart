@@ -23,6 +23,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
   String get workoutType => _workoutType;
   String get location => _location;
+  String get playlist => _playlist;
   List<ExerciseEntry> get exercises => _exercises;
 
   PostBloc(this._firebaseRepo) : super(const PostState()) {

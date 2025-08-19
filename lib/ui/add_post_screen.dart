@@ -44,6 +44,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
   int selectedSets = 1;
   String? userId;
   String? username;
+  final FocusNode _workoutTypeFocus = FocusNode();
+  final FocusNode _locationFocus = FocusNode();
+  final FocusNode _playlistFocus = FocusNode();
+  final FocusNode _setsFocus = FocusNode();
+
 
   @override
   void initState() {
@@ -145,7 +150,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
       permissionStatus = await Permission.camera.request();
       source = ImageSource.camera;
     } else {
-      // Provjera za Android 13+ i starije verzije
       if (Platform.isAndroid && (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 33) {
         permissionStatus = await Permission.photos.request();
       } else {
@@ -224,7 +228,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
             );
           }
         } else if (state is FailedAddedPost) {
-          print("Emitting FailedAddedPost state: ${state.error}");
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -274,7 +277,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 curr is EmptyExercises ||
                                 curr is AddingExercise,
                             builder: (context, state) {
-                              print("state in AddedScreen is $state");
                               if (state is AddedExercises) {
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,6 +414,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                     return;
                                   }
 
+                                  FocusScope.of(context).unfocus();
+
+
                                   // Passed ML check: dispatch to bloc
                                   context.read<PostBloc>().add(
                                     AddExercises(
@@ -478,7 +483,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                               String? workoutType;
                               if (state is AddedWorkoutType) {
                                 workoutType = state.addedWorkoutType;
-                              } // Spremi vrijednost iz Bloca
+                              }
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -501,6 +506,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                         horizontal: 8, vertical: 16),
                                     child: TextField(
                                       controller: workoutTypeController,
+                                      focusNode: _workoutTypeFocus,
                                       decoration: InputDecoration(
                                         border: OutlineInputBorder(
                                             borderRadius:
@@ -525,6 +531,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                         onPressed: () {
                                           if (workoutTypeController
                                               .text.isNotEmpty) {
+                                            FocusScope.of(context).unfocus();
                                             context.read<PostBloc>().add(
                                                 AddWorkoutType(
                                                     addedWorkoutType:
@@ -666,6 +673,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                           horizontal: 8, vertical: 16),
                                       child: TextField(
                                         controller: locationController,
+                                        focusNode: _locationFocus,
                                         decoration: InputDecoration(
                                           border: OutlineInputBorder(
                                             borderRadius:
@@ -693,6 +701,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                           onPressed: () {
                                             if (locationController
                                                 .text.isNotEmpty) {
+                                              FocusScope.of(context).unfocus();
                                               context.read<PostBloc>().add(
                                                   AddLocation(
                                                       addedLocation:
@@ -758,7 +767,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                               String? playlist;
                               if (state is AddedPlaylist) {
                                 playlist = state.addedPlaylist;
-                              } // Spremi vrijednost iz Bloca
+                              }
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -790,6 +799,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                         horizontal: 8, vertical: 16),
                                     child: TextField(
                                       controller: playlistController,
+                                      focusNode: _playlistFocus,
                                       decoration: InputDecoration(
                                         border: OutlineInputBorder(
                                             borderRadius:
@@ -814,6 +824,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                         onPressed: () {
                                           if (playlistController
                                               .text.isNotEmpty) {
+                                            FocusScope.of(context).unfocus();
                                             context.read<PostBloc>().add(
                                                 AddPlaylist(
                                                     addedPlaylist:
@@ -1066,7 +1077,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                       date: selectedDate ?? DateTime.now(),
                                       location: postBloc.location,
                                       photoURL: photoURL,
-                                      playlist: playlistController.text,
+                                      playlist: postBloc.playlist,
                                       workout_type: postBloc.workoutType,
                                       intensity:
                                           selectedIntensity ?? Intensity.Easy,

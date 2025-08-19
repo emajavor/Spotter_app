@@ -163,7 +163,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                           // Location
                                           Flexible(
                                             child: Text(
-                                              post.location ?? 'Unknown',
+                                              post.location,
                                               style: GoogleFonts.poppins(
                                                 fontWeight: FontWeight.w400,
                                                 fontSize: 14,
@@ -219,11 +219,11 @@ class _FeedScreenState extends State<FeedScreen> {
                               textAlign: TextAlign.left,
                             ),
                             const SizedBox(height: 10),
-                            if (post.photoURL != null && post.photoURL!.isNotEmpty && post.photoURL != '')
+                            if (post.photoURL.isNotEmpty && post.photoURL != '')
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
-                                  post.photoURL!,
+                                  post.photoURL,
                                   width: MediaQuery.of(context).size.width * 0.9,
                                   height: MediaQuery.of(context).size.width * 0.6,
                                   fit: BoxFit.cover,
