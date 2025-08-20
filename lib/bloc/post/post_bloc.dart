@@ -88,7 +88,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
     }
     else {
-      print("PLAYLIST: $_playlist");
       emit(AddedPlaylist(_playlist));
     }
   }
@@ -110,7 +109,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       emit(AddedImage(_image!));
     }
     else {
-      emit(EmptyImage());
+      emit(const EmptyImage());
     }
   }
 
@@ -118,8 +117,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(const FetchingPosts());
     try {
       final posts = await _firebaseRepo.getAll();
-      print('Fetched ${posts.length} posts from Firebase: ${posts.map((p) => p.id).toList()}');
-      posts.forEach((post) => print('Post ${post.id}: date=${post.date}'));
       // Sort newest first, with fallback for non-numeric IDs
       final sortedPosts = posts
         ..sort((a, b) {
@@ -131,7 +128,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
         });
       emit(FetchedPosts(sortedPosts));
     } catch (e) {
-      print('Error fetching posts: $e');
       emit(FetchingFailed(e.toString()));
     }
   }

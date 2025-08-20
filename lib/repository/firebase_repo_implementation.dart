@@ -22,7 +22,6 @@ class FirebaseRepo implements IFirebaseRepo {
 
   Future<List<Post>> getAll() async {
     try {
-      print("Fetching all posts from Firestore");
       final querySnapshot = await db
           .collection('posts')
           .orderBy('id', descending: true)
@@ -30,10 +29,8 @@ class FirebaseRepo implements IFirebaseRepo {
       final posts = querySnapshot.docs
           .map((doc) {
         final data = doc.data();
-        print("Raw Firestore data for post ${doc.id}: $data");
         try {
           final post = Post.fromJson(data);
-          print("Parsed post ${doc.id}: date=${post.date}, exercises=${post.exercises.map((e) => e.toDisplayString()).toList()}");
           return post;
         } catch (e) {
           print("Failed to parse post ${doc.id}: $e");
@@ -43,7 +40,6 @@ class FirebaseRepo implements IFirebaseRepo {
           .where((post) => post != null)
           .cast<Post>()
           .toList();
-      print("Fetched ${posts.length} posts: ${posts.map((p) => p.id).toList()}");
       return posts;
     } catch (e) {
       print("Error fetching posts: $e");
@@ -56,7 +52,6 @@ class FirebaseRepo implements IFirebaseRepo {
     try {
       final now = DateTime.now();
       final oneWeekAgo = now.subtract(const Duration(days: 7));
-      print("Fetching posts for user $userId from $oneWeekAgo to $now");
 
       // Fetch posts without date filter to debug
       final allUserPosts = await db
@@ -66,13 +61,10 @@ class FirebaseRepo implements IFirebaseRepo {
       final allPosts = allUserPosts.docs
           .map((doc) {
         final data = doc.data();
-        print("Raw Firestore data for post ${doc.id}: $data");
         final post = Post.fromJson(data);
-        print("Parsed post: ${post.id}, date: ${post.date}, exercises: ${post.exercises.map((e) => e.toDisplayString()).toList()}");
         return post;
       })
           .toList();
-      print("Fetched ${allPosts.length} posts for user $userId (no date filter)");
 
       // Apply date filter
       final querySnapshot = await db
@@ -83,16 +75,12 @@ class FirebaseRepo implements IFirebaseRepo {
       final posts = querySnapshot.docs
           .map((doc) {
         final data = doc.data();
-        print("Raw Firestore data for filtered post ${doc.id}: $data");
         final post = Post.fromJson(data);
-        print("Filtered post: ${post.id}, date: ${post.date}, exercises: ${post.exercises.map((e) => e.toDisplayString()).toList()}");
         return post;
       })
           .toList();
-      print("Fetched ${posts.length} posts for user $userId in last 7 days");
       return posts;
     } catch (e) {
-      print("Error fetching user posts: $e");
       final prefs = await SharedPreferences.getInstance();
       final cachedPosts = prefs.getString('cached_posts');
       if (cachedPosts != null) {
@@ -104,7 +92,6 @@ class FirebaseRepo implements IFirebaseRepo {
             post.date != null &&
             post.date!.isAfter(DateTime.now().subtract(const Duration(days: 7))))
             .toList();
-        print("Returning ${cached.length} cached posts for user $userId");
         return cached;
       }
       return [];
@@ -134,7 +121,6 @@ class FirebaseRepo implements IFirebaseRepo {
           .collection('posts')
           .doc(documentId)
           .update({'intensity': newIntensity});
-      print('Document successfully updated!');
     } catch (e) {
       print('Error updating document: $e');
     }
@@ -169,11 +155,8 @@ class FirebaseRepo implements IFirebaseRepo {
         post = post.copyWith(username: user.username);
       }
       post = post.copyWith(photoURL: post.photoURL.isEmpty ? '' : post.photoURL);
-      print("Adding post: ${post.toString()}");
       await db.collection('posts').doc(post.id).set(post.toJson());
-      print("Post added successfully: ${post.id}");
     } catch (e) {
-      print("Error adding post: $e");
       rethrow;
     }
   }
@@ -185,7 +168,6 @@ class FirebaseRepo implements IFirebaseRepo {
       final reference = _storage.ref().child("post_images/$fileName");
       await reference.putFile(File(image.path));
       final url = await reference.getDownloadURL();
-      print("Image uploaded: $url");
       return url;
     } catch (e) {
       print("Error uploading image: $e");
@@ -196,7 +178,6 @@ class FirebaseRepo implements IFirebaseRepo {
   Future<void> saveUser(User user) async {
     try {
       await db.collection("users").doc(user.uid).set(user.toJson());
-      print("User saved: ${user.uid}, ${user.username}");
     } catch (e) {
       print("Error saving user: $e");
       rethrow;
@@ -209,7 +190,6 @@ class FirebaseRepo implements IFirebaseRepo {
       if (doc.exists) {
         return User.fromJson(doc.data() as Map<String, dynamic>);
       }
-      print("User not found: $uid");
       return null;
     } catch (e) {
       print("Error getting user: $e");
@@ -223,7 +203,6 @@ class FirebaseRepo implements IFirebaseRepo {
       final reference = _storage.ref().child("profile_pictures/$fileName");
       await reference.putFile(File(image.path));
       final url = await reference.getDownloadURL();
-      print("Profile picture uploaded: $url");
       return url;
     } catch (e) {
       print("Error uploading profile picture: $e");
@@ -240,7 +219,6 @@ class FirebaseRepo implements IFirebaseRepo {
           'username': data['username'] ?? 'Korisnik',
           'profilePictureUrl': data['profilePictureUrl'] ?? '',
         });
-        print("Updated user: ${doc.id}");
       }
     } catch (e) {
       print("Error migrating users: $e");

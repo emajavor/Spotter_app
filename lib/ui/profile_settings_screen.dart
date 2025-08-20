@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'dart:io';
 
-import '../models/user.dart' as app_user;
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});

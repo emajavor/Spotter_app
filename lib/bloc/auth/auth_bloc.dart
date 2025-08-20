@@ -57,7 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (existingUser == null) {
         final user = User(
           uid: userCredential.user!.uid,
-          username: googleUser.displayName ?? 'Korisnik',
+          username: googleUser.displayName ?? 'User',
           email: googleUser.email,
           createdAt: Timestamp.now(),
           profilePictureUrl: googleUser.photoUrl ?? '',

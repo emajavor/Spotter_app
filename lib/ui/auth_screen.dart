@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/bloc/auth/auth_bloc.dart';
@@ -140,7 +139,7 @@ class _AuthScreenState extends State<AuthScreen>
                         if (usernameController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Korisničko ime je obavezno za registraciju!',
+                              content: Text('Username is mandatory for registration!',
                                   style: GoogleFonts.poppins()),
                               backgroundColor: Theme.of(context).colorScheme.error,
                             ),
@@ -166,7 +165,7 @@ class _AuthScreenState extends State<AuthScreen>
                       child: Text('Sign Up', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton.icon(
+                    /*ElevatedButton.icon(
                       onPressed: () {
                         context.read<AuthBloc>().add(SignInWithGoogle());
                       },
@@ -180,7 +179,7 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       ),
-                    ),
+                    ),*/
                     const SizedBox(height: 20),
                   ],
                 ),

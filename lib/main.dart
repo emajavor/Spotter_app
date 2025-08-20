@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/bloc/auth/auth_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
