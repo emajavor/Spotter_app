@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotter_app/ui/profile_settings_screen.dart';
 import 'package:spotter_app/ui/weekly_progress_screen.dart';
 import 'package:spotter_app/ui/workout_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../bloc/auth/auth_bloc.dart';
 import '../models/post.dart';
 import '../models/user.dart' as app_user;
@@ -24,9 +25,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   void initState() {
     super.initState();
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    print("Current user ID: $userId");
     if (userId == null) {
-      print("No user logged in, redirecting to auth");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/auth');
       });
@@ -143,15 +142,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               ),
               BlocBuilder<PostBloc, PostState>(
                 builder: (context, state) {
-                  print("MyProfileScreen: State: $state");
                   if (state is FetchingPosts) {
                     return const SliverToBoxAdapter(
                       child: Center(child: CircularProgressIndicator()),
                     );
                   } else if (state is FetchedPosts) {
                     final userPosts = state.allPosts.where((post) => post.userId == userId).toList();
-                    print("MyProfileScreen: Rendering ${userPosts.length} posts for user $userId: ${userPosts.map((p) => p.id).toList()}");
-                    userPosts.forEach((post) => print("Post ${post.id}: date=${post.date}"));
                     if (userPosts.isEmpty) {
                       return SliverToBoxAdapter(
                         child: Center(
@@ -164,7 +160,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     }
                     return postList(userPosts);
                   } else if (state is FetchingFailed) {
-                    print("MyProfileScreen: Failed: ${state.error}");
                     return SliverToBoxAdapter(
                       child: Center(
                         child: Column(
@@ -250,7 +245,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Widget postList(List<Post> posts) {
     final firebaseRepo = context.read<FirebaseRepo>();
     final userCache = <String, app_user.User?>{};
-    print("Rendering post list with ${posts.length} posts for user: ${FirebaseAuth.instance.currentUser?.uid}");
     return SliverList(
       delegate: SliverChildBuilderDelegate(
             (context, index) {
@@ -315,7 +309,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) => const CircularProgressIndicator(),
                                       errorWidget: (context, url, error) {
-                                        print('Profile image error for post ${post.id}: $error');
                                         return Icon(
                                           Icons.person,
                                           size: 50,
@@ -409,7 +402,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 child: Center(child: CircularProgressIndicator()),
                               ),
                               errorWidget: (context, url, error) {
-                                print('Image error for post ${post.id}: $error');
                                 return Container(
                                   color: Theme.of(context).colorScheme.surface,
                                   height: MediaQuery.of(context).size.width * 0.6,
@@ -434,14 +426,45 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             const SizedBox(width: 8),
                             SizedBox(
                               width: MediaQuery.of(context).size.width * 0.8,
-                              child: Text(
-                                post.playlist.isNotEmpty ? post.playlist : 'No playlist',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                              child: GestureDetector(
+                                onTap: () async {
+                                  final playlistUrl = post.playlist.isNotEmpty ? post.playlist : null;
+                                  if (playlistUrl != null) {
+                                    final uri = Uri.tryParse(playlistUrl);
+                                    if (uri != null) {
+                                      try {
+                                        await launchUrl(
+                                          uri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Ne mogu otvoriti link')),
+                                        );
+                                      }
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Nevažeći format URL-a')),
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Nema dostupnog linka za playlistu')),
+                                    );
+                                  }
+                                },
+                                child: Text(
+                                  post.playlist.isNotEmpty ? post.playlist : 'No playlist',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: post.playlist.isNotEmpty
+                                        ? Colors.blue
+                                        : Theme.of(context).colorScheme.onSurface,
+                                    decoration: post.playlist.isNotEmpty ? TextDecoration.underline : null,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
                               ),
                             ),
                           ],

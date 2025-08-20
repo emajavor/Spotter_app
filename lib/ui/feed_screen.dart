@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/ui/workout_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/user.dart' as app_user;
 
 import '../models/post.dart';
@@ -40,7 +41,6 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
       body: BlocConsumer<PostBloc, PostState>(
         listener: (context, state) {
-          print('Listener state: $state');
           if (state is FetchingFailed) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -54,11 +54,9 @@ class _FeedScreenState extends State<FeedScreen> {
           }
         },
         builder: (context, state) {
-          print('Current state: $state');
           if (state is FetchingPosts) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is FetchedPosts) {
-            print('Posts fetched: ${state.allPosts.length}');
             if (state.allPosts.isEmpty) {
               return Center(
                 child: Text(
@@ -77,7 +75,6 @@ class _FeedScreenState extends State<FeedScreen> {
               child: ListView.separated(
                 itemBuilder: (context, index) {
                   final post = state.allPosts[index];
-                  print('Rendering post ${post.id}');
                   final currentUserId = FirebaseAuth.instance.currentUser?.uid;
                   final isLiked = currentUserId != null && post.likes.contains(currentUserId);
                   return GestureDetector(
@@ -128,7 +125,6 @@ class _FeedScreenState extends State<FeedScreen> {
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) => const CircularProgressIndicator(),
                                         errorWidget: (context, url, error) {
-                                          print('Profile image error for post ${post.id}: $error');
                                           return Icon(
                                             Icons.person,
                                             size: 50,
@@ -228,7 +224,6 @@ class _FeedScreenState extends State<FeedScreen> {
                                   height: MediaQuery.of(context).size.width * 0.6,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    print('Image error for post ${post.id} by ${post.username}: $error');
                                     return Container(
                                       color: Theme.of(context).colorScheme.surface,
                                       height: MediaQuery.of(context).size.width * 0.6,
@@ -252,13 +247,69 @@ class _FeedScreenState extends State<FeedScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
-                                    post.playlist ?? 'No playlist',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      final playlistUrl = post.playlist ?? '';
+                                      if (playlistUrl.isNotEmpty) {
+                                        final cleanUrl = playlistUrl.split('?').first;
+                                        final uri = Uri.tryParse(cleanUrl);
+                                        if (uri == null || !uri.hasAbsolutePath) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Invalid URL format')),
+                                          );
+                                          return;
+                                        }
+
+                                        try {
+                                          bool launched = await launchUrl(
+                                            uri,
+                                            mode: LaunchMode.externalApplication,
+                                          );
+
+                                          if (!launched) {
+                                            launched = await launchUrl(
+                                              uri,
+                                              mode: LaunchMode.platformDefault,
+                                            );
+                                          }
+
+                                          if (!launched) {
+                                            launched = await launchUrl(
+                                              uri,
+                                              mode: LaunchMode.inAppBrowserView,
+                                            );
+                                          }
+
+                                          if (!launched) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Unable to open link')),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          print('Error launching URL $cleanUrl: $e');
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error opening link: $e')),
+                                          );
+                                        }
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('No playlist link available')),
+                                        );
+                                      }
+                                    },
+                                    child: Text(
+                                      post.playlist ?? 'No playlist',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        color: post.playlist != null && post.playlist!.isNotEmpty
+                                            ? Colors.blue
+                                            : Theme.of(context).colorScheme.onSurface,
+                                        decoration: post.playlist != null && post.playlist!.isNotEmpty
+                                            ? TextDecoration.underline
+                                            : null,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
