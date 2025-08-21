@@ -1,9 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class WeeklyProgressScreen extends StatefulWidget {
   const WeeklyProgressScreen({super.key});
@@ -24,6 +25,18 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
     }
   }
 
+  Color _statusColor(String status) {
+    if (status.contains('Balanced')) return Colors.green;
+    if (status.contains('Overtrained')) return Colors.red;
+    return Colors.orange;
+  }
+
+  IconData _statusIcon(String status) {
+    if (status.contains('Balanced')) return Icons.check_circle_rounded;
+    if (status.contains('Overtrained')) return Icons.warning_amber_rounded;
+    return Icons.hourglass_bottom_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,175 +45,253 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
           'Weekly Progress',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Weekly Muscle Group Status',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w500,
-                fontSize: 20,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: BlocBuilder<PostBloc, PostState>(
-                buildWhen: (prev, curr) =>
-                curr is FetchingWeeklyTotals ||
-                    curr is FetchedWeeklyTotals ||
-                    curr is FailedWeeklyTotals,
-                builder: (context, state) {
-                  if (state is FetchingWeeklyTotals) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is FetchedWeeklyTotals) {
-                    if (state.muscleSets.isEmpty) {
-                      return Text(
-                        'No workouts in the last 7 days',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      );
-                    }
-
-                    final muscleGroups = state.muscleSets.keys.toList();
-                    final values = state.muscleSets.values.toList();
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Bar Chart
-                        SizedBox(
-                          height: 200,
-                          child: BarChart(
-                            BarChartData(
-                              barGroups: muscleGroups.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final muscle = entry.value;
-                                final sets = state.muscleSets[muscle]!.toDouble();
-                                final status = state.muscleStatus[muscle]!;
-                                final color = status.contains('Balanced')
-                                    ? Colors.green
-                                    : status.contains('Overtrained')
-                                    ? Colors.red
-                                    : Colors.orange;
-
-                                return BarChartGroupData(
-                                  x: index,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: sets,
-                                      color: color,
-                                      width: 20,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                              titlesData: FlTitlesData(
-                                leftTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: true),
-                                ),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, meta) {
-                                      final index = value.toInt();
-                                      if (index < muscleGroups.length) {
-                                        return SideTitleWidget(
-                                          axisSide: meta.axisSide,
-                                          child: Text(
-                                            muscleGroups[index],
-                                            style: GoogleFonts.poppins(fontSize: 12),
-                                          ),
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    },
-                                  ),
-                                ),
-                              ),
-                              gridData: const FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                              barTouchData: BarTouchData(enabled: true),
-                              maxY: values.reduce((a, b) => a > b ? a : b).toDouble() + 2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Status List
-                        Expanded(
-                          child: ListView(
-                            children: state.muscleStatus.entries
-                                .map(
-                                  (entry) => Padding(
-                                padding:
-                                const EdgeInsets.symmetric(vertical: 4),
-                                child: Text(
-                                  '${entry.key}: ${state.muscleSets[entry.key]} sets, ${entry.value}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color: entry.value.contains('Balanced')
-                                        ? Colors.green
-                                        : entry.value.contains('Overtrained')
-                                        ? Colors.red
-                                        : Colors.orange,
-                                  ),
-                                ),
-                              ),
-                            )
-                                .toList(),
-                          ),
-                        ),
-                      ],
-                    );
-                  } else if (state is FailedWeeklyTotals) {
-                    return Text(
-                      'Error loading weekly totals: ${state.error}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    );
-                  }
-                  return Text(
-                    'No data available',
+        child: BlocBuilder<PostBloc, PostState>(
+          buildWhen: (prev, curr) =>
+          curr is FetchingWeeklyTotals ||
+              curr is FetchedWeeklyTotals ||
+              curr is FailedWeeklyTotals,
+          builder: (context, state) {
+            if (state is FetchingWeeklyTotals) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is FetchedWeeklyTotals) {
+              if (state.muscleSets.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No workouts in the last 7 days',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                  );
-                },
-              ),
-            ),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  final userId = _auth.currentUser?.uid;
-                  if (userId != null) {
-                    context.read<PostBloc>().add(GetWeeklyTotals(userId));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  ),
+                );
+              }
+
+              final muscleGroups = state.muscleSets.keys.toList();
+              final values = state.muscleSets.values.toList();
+
+              // summary
+              final totalSets = values.fold<int>(0, (a, b) => a + b);
+
+              // date range (last 7 days)
+              final today = DateTime.now();
+              final weekStart = today.subtract(const Duration(days: 6));
+              final formatter = DateFormat('dd.MM.');
+              final dateRange = "${formatter.format(weekStart)} - ${formatter.format(today)}";
+
+              return Column(
+                children: [
+                  // 🟢 Summary Card
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _summaryItem("Total", "$totalSets sets"),
+                          _summaryItem("Period", dateRange),
+                          //_summaryItem("🔥 Total", "$totalSets sets"),
+                          //_summaryItem("📅 Period", dateRange),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        height: 220,
+                        child: BarChart(
+                          BarChartData(
+                            barGroups: muscleGroups.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final muscle = entry.value;
+                              final sets = state.muscleSets[muscle]!.toDouble();
+                              final status = state.muscleStatus[muscle]!;
+                              final color = _statusColor(status);
+
+                              return BarChartGroupData(
+                                x: index,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: sets,
+                                    color: color,
+                                    width: muscleGroups.length > 5 ? 15 : 20,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 32,
+                                  getTitlesWidget: (value, meta) {
+                                    return Text(
+                                      value.toInt().toString(),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 50,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index < muscleGroups.length) {
+                                      final name = muscleGroups[index];
+                                      // ako je predugo, prikazati skraćeno
+                                      final shortName = name.length > 8 ? "${name.substring(0, 6)}…" : name;
+
+                                      return SideTitleWidget(
+                                        axisSide: meta.axisSide,
+                                        space: 6,
+                                        child: Text(
+                                          shortName,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            ),
+                            gridData: const FlGridData(show: false),
+                            borderData: FlBorderData(show: false),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                tooltipBgColor: Theme.of(context).colorScheme.surface,
+                                tooltipPadding: const EdgeInsets.all(8),
+                                tooltipMargin: 8,
+                                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                  final muscle = muscleGroups[group.x.toInt()];
+                                  final sets = rod.toY.toInt();
+                                  final status = state.muscleStatus[muscle]!;
+                                  return BarTooltipItem(
+                                    '$muscle\n$sets sets, $status',
+                                    GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            maxY: values.reduce((a, b) => a > b ? a : b).toDouble() + 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Expanded(
+                    child: ListView(
+                      children: state.muscleStatus.entries.map((entry) {
+                        final color = _statusColor(entry.value);
+                        final icon = _statusIcon(entry.value);
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          child: ListTile(
+                            leading: Icon(icon, color: color, size: 28),
+                            title: Text(
+                              entry.key,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "${state.muscleSets[entry.key]} sets — ${entry.value}",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              );
+            } else if (state is FailedWeeklyTotals) {
+              return Center(
+                child: Text(
+                  'Error loading weekly totals: ${state.error}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                 ),
-                child: Text(
-                  'Refresh',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              );
+            }
+            return Center(
+              child: Text(
+                'No data available',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _summaryItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
