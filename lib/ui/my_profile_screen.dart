@@ -126,14 +126,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ),
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const WeeklyProgressScreen()),
                               );
+                              // when you return from this screen fetch posts again
+                              context.read<PostBloc>().add(const GetPosts());
                             },
                             child: Text('View Weekly Progress', style: GoogleFonts.poppins()),
                           ),
+
                         ],
                       );
                     },

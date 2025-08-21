@@ -73,10 +73,8 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
               final muscleGroups = state.muscleSets.keys.toList();
               final values = state.muscleSets.values.toList();
 
-              // summary
               final totalSets = values.fold<int>(0, (a, b) => a + b);
 
-              // date range (last 7 days)
               final today = DateTime.now();
               final weekStart = today.subtract(const Duration(days: 6));
               final formatter = DateFormat('dd.MM.');
@@ -84,7 +82,6 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
 
               return Column(
                 children: [
-                  // 🟢 Summary Card
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -159,7 +156,6 @@ class _WeeklyProgressScreenState extends State<WeeklyProgressScreen> {
                                     final index = value.toInt();
                                     if (index < muscleGroups.length) {
                                       final name = muscleGroups[index];
-                                      // ako je predugo, prikazati skraćeno
                                       final shortName = name.length > 8 ? "${name.substring(0, 6)}…" : name;
 
                                       return SideTitleWidget(
