@@ -35,5 +35,4 @@ final List<Exercise> allExercises = [
   Exercise(name: 'Leg Extension', muscleGroups: ['Quads']),
   Exercise(name: 'Arnold Press', muscleGroups: ['Shoulders']),
   Exercise(name: 'Face Pull', muscleGroups: ['Rear Delts', 'Traps']),
-
 ];

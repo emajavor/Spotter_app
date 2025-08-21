@@ -9,12 +9,12 @@ class SpotterTheme {
         primary: const Color(0xFF00FFBB),
         secondary: const Color(0xFF1E1E1E),
       ),
-      surfaceMode: FlexSurfaceMode.highScaffoldLowSurface, // Suptilni blend
-      blendLevel: 10, // Jačina blendinga
+      surfaceMode: FlexSurfaceMode.highScaffoldLowSurface,
+      blendLevel: 10,
       appBarStyle: FlexAppBarStyle.background,
       appBarOpacity: 1.0,
       visualDensity: VisualDensity.standard,
-      useMaterial3: true, // Omogući Material 3
+      useMaterial3: true,
       textTheme: GoogleFonts.poppinsTextTheme(),
     ).toTheme.copyWith(
       snackBarTheme: SnackBarThemeData(
@@ -24,7 +24,7 @@ class SpotterTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF1E1E1E), // Tamna pozadina polja
+        fillColor: const Color(0xFF1E1E1E),
         hintStyle: TextStyle(color: Colors.grey[600]),
         prefixIconColor: const Color(0xFF00FFBB),
         border: OutlineInputBorder(
