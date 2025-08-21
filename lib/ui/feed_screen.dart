@@ -20,6 +20,29 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+
+  final Map<String, app_user.User> _userCache = {};
+
+  Future<app_user.User?> _getUser(String userId) async {
+    if (_userCache.containsKey(userId)) {
+      return _userCache[userId];
+    }
+    final user = await context.read<FirebaseRepo>().getUser(userId);
+    if (user != null) {
+      _userCache[userId] = user;
+    }
+    return user;
+  }
+
+  final Map<String, Future<app_user.User?>> _userFutureCache = {};
+
+  Future<app_user.User?> _getUserCached(String userId) {
+    if (!_userFutureCache.containsKey(userId)) {
+      _userFutureCache[userId] = _getUser(userId);
+    }
+    return _userFutureCache[userId]!;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -103,7 +126,7 @@ class _FeedScreenState extends State<FeedScreen> {
                               children: [
                                 ClipOval(
                                   child: FutureBuilder<app_user.User?>(
-                                    future: context.read<FirebaseRepo>().getUser(post.userId),
+                                    future: _getUserCached(post.userId),
                                     builder: (context, snapshot) {
                                       String profilePictureUrl = 'assets/images/boy.png';
                                       if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data != null) {
