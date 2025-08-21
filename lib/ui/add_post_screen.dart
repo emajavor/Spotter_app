@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
@@ -12,8 +13,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:spotter_app/data/exercise_data.dart';
 import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/post.dart';
+import 'package:spotter_app/ui/widgets/PrimaryButton.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 
 import '../bloc/post/post_bloc.dart';
 import '../models/enums/intensity.dart';
@@ -40,7 +41,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
-  Exercise? selectedExercise; // Store selected exercise object
+  Exercise? selectedExercise;
   int selectedSets = 1;
   String? userId;
   String? username;
@@ -92,7 +93,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             ),
             IconButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context, 'cancel');
               },
               icon: Icon(
                 Icons.close,
@@ -143,6 +144,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
         ),
       ),
     );
+
+    if (result == null || result == 'cancel') {
+      return;
+    }
 
     PermissionStatus permissionStatus;
     ImageSource source;
@@ -205,7 +210,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
     return BlocListener<PostBloc, PostState>(
       listener: (context, state) async {
         if (state is AddedPost) {
-          print("Emitting AddedPost state: ${state.addedPost}");
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -364,91 +368,83 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                           ),
                           Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 15.0),
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  if (selectedExercise == null || _setsController.text.trim().isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Please select an exercise and enter sets')),
-                                    );
-                                    return;
-                                  }
-
-                                  if (!_mlReady) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Model loading, please wait…')),
-                                    );
-                                    return;
-                                  }
-
-                                  final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
-                                  final muscleGroups = selectedExercise!.muscleGroups;
-                                  bool isOvertrained = false;
-                                  List<String> statusMessages = [];
-
-                                  for (final muscleGroup in muscleGroups) {
-                                    final pred = await _mlModel.predict(
-                                      muscle: muscleGroup,
-                                      soFar: 0, // Per-session prediction, no weekly totals
-                                      toAdd: setsToAdd,
-                                    );
-                                    final labels = ['undertrained', 'balanced', 'overtrained'];
-                                    final label = labels[pred];
-                                    statusMessages.add('$muscleGroup: $label');
-                                    if (pred == 2) isOvertrained = true;
-                                  }
-
+                            child: PrimaryButton(
+                              text: 'ADD EXERCISE',
+                              onPressed: () async {
+                                if (selectedExercise == null ||
+                                    _setsController.text.trim().isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(statusMessages.join(', ')),
-                                    ),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Please select an exercise and enter sets')),
                                   );
+                                  return;
+                                }
 
-                                  if (isOvertrained) {
-                                    // Stop if any muscle group is overtrained
-                                    return;
-                                  }
-
-                                  FocusScope.of(context).unfocus();
-
-
-                                  // Passed ML check: dispatch to bloc
-                                  context.read<PostBloc>().add(
-                                    AddExercises(
-                                      exerciseEntry: ExerciseEntry(
-                                        name: selectedExercise!.name,
-                                        muscleGroups: selectedExercise!.muscleGroups,
-                                        sets: setsToAdd,
-                                      ),
-                                    ),
+                                if (!_mlReady) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Model loading, please wait…')),
                                   );
+                                  return;
+                                }
 
-                                  _setsController.clear();
-                                  setState(() {
-                                    selectedExercise = null;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                final setsToAdd =
+                                    int.tryParse(_setsController.text.trim()) ??
+                                        0;
+                                final muscleGroups =
+                                    selectedExercise!.muscleGroups;
+                                bool isOvertrained = false;
+                                List<String> statusMessages = [];
+
+                                for (final muscleGroup in muscleGroups) {
+                                  final pred = await _mlModel.predict(
+                                    muscle: muscleGroup,
+                                    soFar: 0,
+                                    // Per-session prediction, no weekly totals
+                                    toAdd: setsToAdd,
+                                  );
+                                  final labels = [
+                                    'undertrained',
+                                    'balanced',
+                                    'overtrained'
+                                  ];
+                                  final label = labels[pred];
+                                  statusMessages.add('$muscleGroup: $label');
+                                  if (pred == 2) isOvertrained = true;
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(statusMessages.join(', ')),
                                   ),
-                                ),
-                                child: Text(
-                                  'ADD EXERCISE',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15),
-                                ),
-                              ),
+                                );
+
+                                if (isOvertrained) {
+                                  // Stop if any muscle group is overtrained
+                                  return;
+                                }
+
+                                FocusScope.of(context).unfocus();
+
+                                // Passed ML check: dispatch to bloc
+                                context.read<PostBloc>().add(
+                                      AddExercises(
+                                        exerciseEntry: ExerciseEntry(
+                                          name: selectedExercise!.name,
+                                          muscleGroups:
+                                              selectedExercise!.muscleGroups,
+                                          sets: setsToAdd,
+                                        ),
+                                      ),
+                                    );
+
+                                _setsController.clear();
+                                setState(() {
+                                  selectedExercise = null;
+                                });
+                              },
                             ),
                           )
                         ],
@@ -524,39 +520,22 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                     ),
                                   ),
                                   Center(
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 15),
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          if (workoutTypeController
-                                              .text.isNotEmpty) {
-                                            FocusScope.of(context).unfocus();
-                                            context.read<PostBloc>().add(
+                                    child: PrimaryButton(
+                                      text:
+                                          workoutType == null ? 'SAVE' : 'EDIT',
+                                      onPressed: () {
+                                        if (workoutTypeController
+                                            .text.isNotEmpty) {
+                                          FocusScope.of(context).unfocus();
+                                          context.read<PostBloc>().add(
                                                 AddWorkoutType(
                                                     addedWorkoutType:
                                                         workoutTypeController
-                                                            .text));
-                                            workoutTypeController.clear();
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          foregroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16)),
-                                        ),
-                                        child: Text(
-                                          workoutType == null ? 'SAVE' : 'EDIT',
-                                          style: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
+                                                            .text),
+                                              );
+                                          workoutTypeController.clear();
+                                        }
+                                      },
                                     ),
                                   ),
                                 ],
@@ -599,24 +578,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             ),
                           ),
                           Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 15),
-                              child: ElevatedButton(
-                                onPressed: addDateTime,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16)),
-                                ),
-                                child: Text(
-                                  selectedDate == null ? 'SELECT' : 'EDIT',
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
+                            child: PrimaryButton(
+                              text: selectedDate == null ? 'SELECT' : 'EDIT',
+                              onPressed: addDateTime,
                             ),
                           ),
                         ],
@@ -694,41 +658,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                       ),
                                     ),
                                     Center(
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 15.0),
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            if (locationController
-                                                .text.isNotEmpty) {
-                                              FocusScope.of(context).unfocus();
-                                              context.read<PostBloc>().add(
-                                                  AddLocation(
-                                                      addedLocation:
-                                                          locationController
-                                                              .text));
-                                              locationController.clear();
-                                            }
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            foregroundColor: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            location == null ? 'SAVE' : 'EDIT',
-                                            style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 15),
-                                          ),
-                                        ),
+                                      child: PrimaryButton(
+                                        text: location == null ? 'SAVE' : 'EDIT',
+                                        onPressed: () {
+                                          if (locationController.text.isNotEmpty) {
+                                            FocusScope.of(context).unfocus();
+                                            context.read<PostBloc>().add(
+                                                AddLocation(addedLocation: locationController.text)
+                                            );
+                                            locationController.clear();
+                                          }
+                                        },
                                       ),
                                     ),
                                   ],
@@ -817,39 +757,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                     ),
                                   ),
                                   Center(
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 15),
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          if (playlistController
-                                              .text.isNotEmpty) {
-                                            FocusScope.of(context).unfocus();
-                                            context.read<PostBloc>().add(
-                                                AddPlaylist(
-                                                    addedPlaylist:
-                                                        playlistController
-                                                            .text));
-                                            playlistController.clear();
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          foregroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16)),
-                                        ),
-                                        child: Text(
-                                          playlist == null ? 'SAVE' : 'EDIT',
-                                          style: GoogleFonts.poppins(
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
+                                    child: PrimaryButton(
+                                      text: playlist == null ? 'SAVE' : 'EDIT',
+                                      onPressed: () {
+                                        if (playlistController.text.isNotEmpty) {
+                                          FocusScope.of(context).unfocus();
+                                          context.read<PostBloc>().add(
+                                              AddPlaylist(addedPlaylist: playlistController.text)
+                                          );
+                                          playlistController.clear();
+                                        }
+                                      },
                                     ),
                                   ),
                                 ],
@@ -907,7 +825,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                 curr is EmptyImage ||
                                 curr is AddingImage,
                             builder: (context, state) {
-                              print("state in AddedScreen is $state");
                               if (state is AddedImage && _image != null) {
                                 return Padding(
                                   padding: const EdgeInsets.all(8.0),
