@@ -15,7 +15,7 @@ class MuscleAnalyzer {
     return muscleMap;
   }
 
-  static Map<String, String> classifyMuscleLoad(Map<String, int> muscleSets) { //Classifies each muscle group and provides recommendations (e.g., "add 2-12 sets" when undertrained).
+  /*static Map<String, String> classifyMuscleLoad(Map<String, int> muscleSets) { //Classifies each muscle group and provides recommendations (e.g., "add 2-12 sets" when undertrained).
     final Map<String, String> statusMap = {};
     for (var muscle in muscleSets.keys) {
       final sets = muscleSets[muscle]!;
@@ -28,5 +28,5 @@ class MuscleAnalyzer {
       }
     }
     return statusMap;
-  }
+  }*/
 }

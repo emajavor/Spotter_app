@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:spotter_app/ml/workout_model.dart';
 import 'package:spotter_app/models/enums/intensity.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:spotter_app/utils/muscle_analyzer.dart';
@@ -20,13 +21,14 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   String _location = "";
   String _playlist = "";
   XFile? _image;
+  final WorkoutModel _workoutModel;
 
   String get workoutType => _workoutType;
   String get location => _location;
   String get playlist => _playlist;
   List<ExerciseEntry> get exercises => _exercises;
 
-  PostBloc(this._firebaseRepo) : super(const PostState()) {
+  PostBloc(this._firebaseRepo) : _workoutModel = WorkoutModel(), super(const PostState()) {
     on<AddWorkoutType>(_onAddWorkoutType);
     on<AddLocation>(_onAddLocation);
     on<AddPlaylist>(_onAddPlaylist);
@@ -38,6 +40,11 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<ToggleLikePost>(_onToggleLikePost);
     on<AddComment>(_onAddComment);
     on<GetWeeklyTotals>(_onGetWeeklyTotals);
+    _initializeModel();
+  }
+
+  Future<void> _initializeModel() async {
+    await _workoutModel.init();
   }
 
   Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
@@ -71,7 +78,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   FutureOr <void> _onAddLocation(AddLocation event, Emitter<PostState> emit)  {
     emit(const AddingLocation());
     _location = event.addedLocation;
-    print("LOCATION: ${event.addedLocation}");
     if(_location.isEmpty){
       emit(EmptyLocation());
     }
@@ -201,10 +207,32 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     try {
       final posts = await _firebaseRepo.getUserPostsInLastWeek(event.userId);
       final muscleSets = MuscleAnalyzer.calculateMuscleSets(posts);
-      final muscleStatus = MuscleAnalyzer.classifyMuscleLoad(muscleSets);
+      final muscleStatus = <String, String>{};
+      for (var muscle in muscleSets.keys) {
+        final sets = muscleSets[muscle]!;
+        final pred = _workoutModel.predict(
+          muscle: muscle,
+          soFar: sets,
+          toAdd: 0,
+        );
+        final labels = ['Undertrained', 'Balanced', 'Overtrained'];
+        muscleStatus[muscle] = labels[pred];
+        if (pred == 0) {
+          muscleStatus[muscle] = 'Undertrained (add ${10 - sets}-${20 - sets} sets)';
+        } else if (pred == 2) {
+          muscleStatus[muscle] = 'Overtrained (reduce by ${sets - 20} sets)';
+        }
+      }
       emit(FetchedWeeklyTotals(muscleSets, muscleStatus));
     } catch (e) {
       emit(FailedWeeklyTotals(e.toString()));
     }
   }
+
+  @override
+  Future<void> close() {
+    _workoutModel.close();
+    return super.close();
+  }
+
 }
