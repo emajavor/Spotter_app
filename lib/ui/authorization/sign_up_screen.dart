@@ -1,16 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:spotter_app/bloc/auth/auth_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+import '../../bloc/auth/auth_bloc.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen>
+class _SignUpScreenState extends State<SignUpScreen>
     with SingleTickerProviderStateMixin {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -20,6 +22,7 @@ class _AuthScreenState extends State<AuthScreen>
 
   @override
   void initState() {
+    super.initState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -105,7 +108,7 @@ class _AuthScreenState extends State<AuthScreen>
                     TextField(
                       controller: usernameController,
                       decoration: InputDecoration(
-                        hintText: 'Username (for signing up)',
+                        hintText: 'Username',
                         prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -116,30 +119,12 @@ class _AuthScreenState extends State<AuthScreen>
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<AuthBloc>().add(
-                          SignInWithEmail(
-                            email: emailController.text.trim(),
-                            password: passwordController.text,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      ),
-                      child: Text('Sign In', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (usernameController.text.trim().isEmpty) {
+                        if (emailController.text.trim().isEmpty ||
+                            passwordController.text.trim().isEmpty ||
+                            usernameController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Username is mandatory for registration!',
+                              content: Text('Email, password, and username are required!',
                                   style: GoogleFonts.poppins()),
                               backgroundColor: Theme.of(context).colorScheme.error,
                             ),
@@ -164,22 +149,35 @@ class _AuthScreenState extends State<AuthScreen>
                       ),
                       child: Text('Sign Up', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                     ),
-                    const SizedBox(height: 16),
-                    /*ElevatedButton.icon(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(SignInWithGoogle());
-                      },
-                      icon: Icon(Icons.g_mobiledata, color: Theme.of(context).colorScheme.onSecondary),
-                      label: Text('Sign In with Google', style: GoogleFonts.poppins()),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
-                        foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: GoogleFonts.poppins(
+                            color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      ),
-                    ),*/
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Sign In',
+                            style: GoogleFonts.poppins(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 20),
                   ],
                 ),

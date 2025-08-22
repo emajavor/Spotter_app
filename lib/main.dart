@@ -7,7 +7,7 @@ import 'package:spotter_app/bloc/auth/auth_bloc.dart';
 import 'package:spotter_app/repository/firebase_repo_implementation.dart';
 import 'package:spotter_app/theme.dart';
 import 'package:spotter_app/ui/home_screen.dart';
-import 'package:spotter_app/ui/auth_screen.dart';
+import 'package:spotter_app/ui/authorization/sign_in_screen.dart';
 import 'package:spotter_app/ui/my_profile_screen.dart';
 import 'firebase_options.dart';
 
@@ -18,7 +18,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final firebaseRepo = FirebaseRepo();
-  //migrateUsers se poziva prije pokretanja aplikacije kako bi se osiguralo da users kolekcija ima username i profilePictureUrl.
+  //migrateUsers is called before starting application so we ensure users collection has profile pic and username
   await firebaseRepo.migrateUsers();
   runApp(MyApp(firebaseRepo: firebaseRepo));
 }
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         theme: SpotterTheme.darkTheme, //our flexcolorscheme theme applied
         initialRoute: '/auth',
         routes: {
-          '/auth': (context) => const AuthScreen(),
+          '/auth': (context) => const SignInScreen(),
           '/start': (context) => const HomeScreen(),
           '/profile': (context) => const MyProfileScreen(),
         },
