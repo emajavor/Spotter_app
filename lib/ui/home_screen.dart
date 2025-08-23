@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/ui/add_post_screen.dart';
 import 'package:spotter_app/ui/my_profile_screen.dart';
+import 'package:spotter_app/ui/plan_workout_screen.dart';
 
 import 'feed_screen.dart';
 
@@ -16,12 +17,11 @@ class HomeScreen extends StatefulWidget { //stateful jer cemo mijenjanjem indexa
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // Lista ekrana za navigaciju
   final List<Widget> _screens = [
     const FeedScreen(),
     const AddPostScreen(),
+    const PlanWorkoutScreen(),
     const MyProfileScreen(),
-    //const SettingsScreen(),
   ];
 
   @override
@@ -73,6 +73,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.add_circle_outline, size: 28),
             label: 'Add Post',
             tooltip: 'Add a new post',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center, size: 28),
+            label: 'Plan',
+            tooltip: 'Plan your weekly workout',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_2_outlined, size: 28,),

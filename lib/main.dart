@@ -9,7 +9,10 @@ import 'package:spotter_app/theme.dart';
 import 'package:spotter_app/ui/home_screen.dart';
 import 'package:spotter_app/ui/authorization/sign_in_screen.dart';
 import 'package:spotter_app/ui/my_profile_screen.dart';
+import 'package:spotter_app/ui/plan_workout_screen.dart';
+import 'bloc/planWorkout/plan_workout_bloc.dart';
 import 'firebase_options.dart';
+import 'ml/workout_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,14 +37,16 @@ class MyApp extends StatelessWidget {
         Provider<FirebaseRepo>.value(value: firebaseRepo),
         BlocProvider(create: (_) => AuthBloc(firebaseRepo)),
         BlocProvider(create: (_) => PostBloc(firebaseRepo)),
+        BlocProvider(create: (_) => PlanWorkoutBloc(WorkoutModel())),
       ],
       child: MaterialApp(
-        theme: SpotterTheme.darkTheme, //our flexcolorscheme theme applied
+        theme: SpotterTheme.darkTheme, //the flexcolorscheme theme applied
         initialRoute: '/auth',
         routes: {
           '/auth': (context) => const SignInScreen(),
           '/start': (context) => const HomeScreen(),
           '/profile': (context) => const MyProfileScreen(),
+          '/plan_workout': (context) => const PlanWorkoutScreen(),
         },
       ),
     );

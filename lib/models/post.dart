@@ -5,24 +5,55 @@ class ExerciseEntry {
   final String name;
   final List<String> muscleGroups;
   final int sets;
+  final bool isCompleted;
 
   const ExerciseEntry({
     required this.name,
     required this.muscleGroups,
     required this.sets,
+    this.isCompleted = false,
   });
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'muscleGroups': muscleGroups,
     'sets': sets,
+    'isCompleted': isCompleted,
   };
 
   factory ExerciseEntry.fromJson(Map<String, dynamic> json) => ExerciseEntry(
     name: json['name'] as String? ?? '',
     muscleGroups: (json['muscleGroups'] as List<dynamic>?)?.cast<String>() ?? [],
     sets: json['sets'] as int? ?? 0,
+    isCompleted: json['isCompleted'] as bool? ?? false,
   );
+
+  ExerciseEntry copyWith({
+    String? name,
+    List<String>? muscleGroups,
+    int? sets,
+    bool? isCompleted,
+  }) {
+    return ExerciseEntry(
+      name: name ?? this.name,
+      muscleGroups: muscleGroups ?? this.muscleGroups,
+      sets: sets ?? this.sets,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is ExerciseEntry &&
+              runtimeType == other.runtimeType &&
+              name == other.name &&
+              muscleGroups == other.muscleGroups &&
+              sets == other.sets &&
+              isCompleted == other.isCompleted;
+
+  @override
+  int get hashCode => name.hashCode ^ muscleGroups.hashCode ^ sets.hashCode ^ isCompleted.hashCode;
 
   String toDisplayString() => '$name (${muscleGroups.join(", ")}, $sets sets)';
 }
@@ -87,8 +118,8 @@ class Post {
     required this.exercises,
     required this.userId,
     required this.username,
-    this.likes = const [], // Default to empty list
-    this.comments = const [], // Default to empty list
+    this.likes = const [],
+    this.comments = const [],
   });
 
   Post copyWith({
