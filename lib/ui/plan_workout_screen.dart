@@ -64,7 +64,6 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
             icon: const Icon(Icons.clear_all_rounded),
             tooltip: "Clear all workouts",
             onPressed: () {
-              print('Clearing all workouts');
               context.read<PlanWorkoutBloc>().add(const ClearPlan());
             },
           ),
@@ -157,7 +156,6 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                           final setsToAdd = int.tryParse(_setsController.text.trim()) ?? 0;
                           final muscleGroups = _selectedExercise!.muscleGroups;
                           bool isOvertrained = false;
-                          List<String> statusMessages = [];
 
                           for (final muscleGroup in muscleGroups) {
                             final pred = _mlModel.predict(
@@ -165,21 +163,13 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                               soFar: context.read<PlanWorkoutBloc>().state.muscleSets[muscleGroup] ?? 0,
                               toAdd: setsToAdd,
                             );
-                            final labels = ['Undertrained', 'Balanced', 'Overtrained'];
-                            final label = labels[pred];
-                            statusMessages.add('$muscleGroup: $label');
                             if (pred == 2) isOvertrained = true;
                           }
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(statusMessages.join(', '))),
-                          );
 
                           if (isOvertrained) return;
 
                           FocusScope.of(context).unfocus();
 
-                          print('Adding exercise to bloc: ${_selectedExercise!.name}, sets: $setsToAdd');
                           context.read<PlanWorkoutBloc>().add(
                             AddPlannedExercise(
                               ExerciseEntry(
@@ -198,27 +188,29 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                         },
                       ),
                     ),
+
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 40,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Center(
+              child: SizedBox(
+                width: 200,
+                height: 40,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    context.read<PlanWorkoutBloc>().add(const AddNewWorkout());
+                  },
+                  label: Text('+ New Workout', style: GoogleFonts.poppins(fontSize: 14)),
                 ),
-                onPressed: () {
-                  print('Adding new workout to bloc');
-                  context.read<PlanWorkoutBloc>().add(const AddNewWorkout());
-                },
-                label: Text('+ New Workout', style: GoogleFonts.poppins(fontSize: 14)),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             Expanded(
               child: BlocBuilder<PlanWorkoutBloc, PlanWorkoutState>(
                 buildWhen: (previous, current) =>
@@ -232,8 +224,6 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                           e.value.isCompleted != currWorkout.exercises[e.key].isCompleted);
                     }),
                 builder: (context, state) {
-                  print('BlocBuilder triggered, workouts: ${state.workouts.length}, '
-                      'exercises: ${state.workouts.map((w) => w.exercises.length).join(", ")}');
                   if (state.workouts.isEmpty) {
                     return Center(
                       child: Text(
@@ -275,14 +265,11 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                               return Card(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                                 elevation: 3,
-                                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                                 child: ListTile(
                                   leading: Checkbox(
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                     value: exercise.isCompleted,
                                     onChanged: (value) {
-                                      print('Checkbox toggled for: ${exercise.name}, '
-                                          'workoutIndex: $workoutIndex, exerciseIndex: $exerciseIndex');
                                       context.read<PlanWorkoutBloc>().add(
                                         ToggleExerciseCompleted(workoutIndex, exerciseIndex),
                                       );
@@ -302,28 +289,76 @@ class _PlanWorkoutScreenState extends State<PlanWorkoutScreen> {
                           ],
                         );
                       }),
-                      const SizedBox(height: 20),
-                      ...state.muscleStatus.entries.map((entry) {
-                        final muscle = entry.key;
-                        final status = entry.value;
-                        final recommendation = state.muscleRecommendations[muscle] ?? '';
-                        return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          elevation: 3,
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                          child: ListTile(
-                            leading: Icon(_statusIcon(status), color: _statusColor(status), size: 30),
-                            title: Text(
-                              muscle,
-                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: Text(
-                              '${state.muscleSets[muscle]} sets — $status\n$recommendation',
-                              style: GoogleFonts.poppins(color: Colors.grey[600]),
-                            ),
-                          ),
-                        );
-                      }),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 5,
+                          childAspectRatio: 0.8,
+                          children: state.muscleStatus.entries.map((entry) {
+                            final muscle = entry.key;
+                            final status = entry.value;
+                            final recommendation = state.muscleRecommendations[muscle] ?? '';
+                            return Card(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(_statusIcon(status), color: _statusColor(status), size: 28),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      muscle,
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${state.muscleSets[muscle]} sets',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.grey[600],
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    Text(
+                                      status,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        color: _statusColor(status),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (recommendation.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        recommendation,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          color: Colors.grey[500],
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
                   );
                 },
