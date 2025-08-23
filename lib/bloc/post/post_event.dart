@@ -4,7 +4,6 @@ class PostEvent extends Equatable {
   const PostEvent();
 
   @override
-  // TODO: implement props
   List<Object?> get props => [];
 }
 class AddPost extends PostEvent{
@@ -50,7 +49,7 @@ class AddPlaylist extends PostEvent{
 }
 
 class AddImage extends PostEvent{
-  final XFile? addedImage; //nullable za kasnije ako budem dodavala gumb za brisanje
+  final XFile? addedImage; //nullable if i add delete button later
 
   const AddImage({this.addedImage});
 
@@ -58,24 +57,23 @@ class AddImage extends PostEvent{
   List<Object?> get props => [addedImage];
 }
 
-class GetPosts extends PostEvent{
-  const GetPosts();
+class GetPosts extends PostEvent {
+  final String userId;
+
+  const GetPosts({required this.userId});
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [userId];
 }
 
-class GetPost extends PostEvent{
+class GetPost extends PostEvent {
   final String id;
-  final Intensity intensity;
+  final String userId;
 
-  const GetPost({
-    required this.id,
-    required this.intensity
-  });
+  const GetPost({required this.id, required this.userId});
 
   @override
-  List<Object> get props => [id, intensity];
+  List<Object?> get props => [id, userId];
 }
 
 class ToggleLikePost extends PostEvent {
@@ -103,4 +101,13 @@ class GetWeeklyTotals extends PostEvent {
   const GetWeeklyTotals(this.userId);
   @override
   List<Object> get props => [userId];
+}
+
+class TogglePostVisibility extends PostEvent {
+  final bool isPublic;
+
+  const TogglePostVisibility(this.isPublic);
+
+  @override
+  List<Object?> get props => [isPublic];
 }

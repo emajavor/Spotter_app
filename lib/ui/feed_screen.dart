@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,8 +47,7 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<PostBloc>().add(const GetPosts());
-  }
+    context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? ''));  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,8 +93,8 @@ class _FeedScreenState extends State<FeedScreen> {
             }
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<PostBloc>().add(const GetPosts());
-              },
+                context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? ''));
+                },
               child: ListView.separated(
                 itemBuilder: (context, index) {
                   final post = state.allPosts[index];

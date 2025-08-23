@@ -5,7 +5,6 @@ class PostState extends Equatable {
 
   @override
   List<Object?> get props => [];
-
 }
 
 class PostInitial extends PostState {
@@ -47,10 +46,10 @@ class FetchingFailed extends PostState{
   List<Object> get props => [error];
 }
 
-class AddedPost extends PostState{
+class AddedPost extends PostState {
   final Post? addedPost;
 
-  const AddedPost([this.addedPost]);
+  const AddedPost(this.addedPost);
 
   @override
   List<Object?> get props => [addedPost];
@@ -135,9 +134,8 @@ class FailedAddedPost  extends PostState{
   List<Object> get props => [error];
 }
 
-class AddingPost extends PostState{
-
-  const AddingPost();
+class AddingPost extends PostState {
+const AddingPost();
 }
 
 class AddingExercise extends PostState {
@@ -204,4 +202,13 @@ class FailedWeeklyTotals extends PostState {
 class FailedFetchedPost extends PostState {
   final String error;
   const FailedFetchedPost(this.error);
+}
+
+class PostVisibilityToggled extends PostState {
+  final bool isPublic;
+
+  const PostVisibilityToggled(this.isPublic);
+
+  @override
+  List<Object> get props => [isPublic];
 }

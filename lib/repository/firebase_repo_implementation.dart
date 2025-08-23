@@ -46,6 +46,33 @@ class FirebaseRepo implements IFirebaseRepo {
       return [];
     }
   }
+  /*@override
+  Future<List<Post>> getAll() async {
+    try {
+      final querySnapshot = await db
+          .collection('posts')
+          .orderBy('id', descending: true)
+          .get(const GetOptions(source: Source.serverAndCache));
+      final posts = querySnapshot.docs
+          .map((doc) {
+        final data = doc.data();
+        try {
+          final post = Post.fromJson(data);
+          return post;
+        } catch (e) {
+          print("Failed to parse post ${doc.id}: $e");
+          return null;
+        }
+      })
+          .where((post) => post != null)
+          .cast<Post>()
+          .toList();
+      return posts;
+    } catch (e) {
+      print("Error fetching posts: $e");
+      return [];
+    }
+  }*/
 
   @override
   Future<List<Post>> getUserPostsInLastWeek(String userId) async {

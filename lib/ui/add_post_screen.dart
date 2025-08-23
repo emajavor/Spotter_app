@@ -223,7 +223,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
           setState(() => _isLoading = false);
           await Future.delayed(const Duration(seconds: 2));
           if (mounted) {
-            context.read<PostBloc>().add(const GetPosts());
+            context.read<PostBloc>().add(GetPosts(userId: userId ?? ''));
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/start',
@@ -904,7 +904,29 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: BlocBuilder<PostBloc, PostState>(
+                        buildWhen: (prev, curr) => curr is PostVisibilityToggled,
+                        builder: (context, state) {
+                          return SwitchListTile(
+                            title: Text(
+                              context.read<PostBloc>().isPublic ? 'Public Post' : 'Private Post',
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              context.read<PostBloc>().isPublic ? 'Visible to everyone' : 'Visible only to you',
+                              style: GoogleFonts.poppins(color: Colors.grey[600]),
+                            ),
+                            value: context.read<PostBloc>().isPublic,
+                            activeColor: Theme.of(context).colorScheme.primary,
+                            onChanged: (value) {
+                              context.read<PostBloc>().add(TogglePostVisibility(value));
+                            },
+                          );
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Center(
                       child: Padding(
@@ -1003,6 +1025,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                       username: username,
                                       likes: [],
                                       comments: [],
+                                      isPublic: postBloc.isPublic,
                                     );
                                     context
                                         .read<PostBloc>()

@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:spotter_app/ml/workout_model.dart';
-import 'package:spotter_app/models/enums/intensity.dart';
 import 'package:spotter_app/models/post.dart';
 import 'package:spotter_app/utils/muscle_analyzer.dart';
 
@@ -21,12 +20,14 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   String _location = "";
   String _playlist = "";
   XFile? _image;
+  bool _isPublic = true;
   final WorkoutModel _workoutModel;
 
   String get workoutType => _workoutType;
   String get location => _location;
   String get playlist => _playlist;
   List<ExerciseEntry> get exercises => _exercises;
+  bool get isPublic => _isPublic;
 
   PostBloc(this._firebaseRepo) : _workoutModel = WorkoutModel(), super(const PostState()) {
     on<AddWorkoutType>(_onAddWorkoutType);
@@ -40,6 +41,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     on<ToggleLikePost>(_onToggleLikePost);
     on<AddComment>(_onAddComment);
     on<GetWeeklyTotals>(_onGetWeeklyTotals);
+    on<TogglePostVisibility>(_onTogglePostVisibility);
     _initializeModel();
   }
 
@@ -50,14 +52,16 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   Future<void> _onAddPost(AddPost event, Emitter<PostState> emit) async {
     emit(const AddingPost());
     try {
-      await _firebaseRepo.addPost(event.addedPost);
-      emit(AddedPost(event.addedPost));
+      final postWithVisibility = event.addedPost.copyWith(isPublic: _isPublic);
+      await _firebaseRepo.addPost(postWithVisibility);
+      emit(AddedPost(postWithVisibility));
       _exercises.clear();
       _workoutType = "";
       _location = "";
       _playlist = "";
       _image = null;
-      add(const GetPosts());
+      _isPublic = true;
+      add(GetPosts(userId: event.addedPost.userId));
     } catch (e) {
       print("Error in AddPost: $e");
       emit(FailedAddedPost(e.toString()));
@@ -123,8 +127,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(const FetchingPosts());
     try {
       final posts = await _firebaseRepo.getAll();
-      // Sort newest first, with fallback for non-numeric IDs
-      final sortedPosts = posts
+      final filteredPosts = posts.where((post) => post.isPublic || post.userId == event.userId).toList();
+      final sortedPosts = filteredPosts
         ..sort((a, b) {
           try {
             return int.parse(b.id).compareTo(int.parse(a.id));
@@ -132,6 +136,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
             return b.id.compareTo(a.id);
           }
         });
+      print('Fetched posts: ${sortedPosts.length}, userId: ${event.userId}');
       emit(FetchedPosts(sortedPosts));
     } catch (e) {
       emit(FetchingFailed(e.toString()));
@@ -141,10 +146,10 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   FutureOr<void> _onGetPost(GetPost event, Emitter<PostState> emit) async {
     try {
       Post? post = await _firebaseRepo.getPost(event.id);
-      if (post != null) {
+      if (post != null && (post.isPublic || post.userId == event.userId)) {
         emit(FetchedPost(post));
       } else {
-        emit(const FailedFetchedPost("Post not found"));
+        emit(const FailedFetchedPost("Post not found or access denied"));
       }
     } catch (e) {
       emit(FailedFetchedPost("Failed to fetch post: ${e.toString()}"));
@@ -233,6 +238,12 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   Future<void> close() {
     _workoutModel.close();
     return super.close();
+  }
+
+  FutureOr<void> _onTogglePostVisibility(TogglePostVisibility event, Emitter<PostState> emit) {
+    print('Toggling post visibility to: ${event.isPublic}');
+    _isPublic = event.isPublic;
+    emit(PostVisibilityToggled(_isPublic));
   }
 
 }

@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotter_app/bloc/post/post_bloc.dart';
@@ -30,12 +31,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         Navigator.pushReplacementNamed(context, '/auth');
       });
     } else {
-      context.read<PostBloc>().add(const GetPosts());
+      context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? ''));
     }
   }
 
   Future<void> _refreshPosts() async {
-    context.read<PostBloc>().add(const GetPosts());
+    context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? ''));
   }
 
   @override
@@ -132,8 +133,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 MaterialPageRoute(builder: (context) => const WeeklyProgressScreen()),
                               );
                               // when you return from this screen fetch posts again
-                              context.read<PostBloc>().add(const GetPosts());
-                            },
+                              context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? ''));
+                              },
                             child: Text('View Weekly Progress', style: GoogleFonts.poppins()),
                           ),
 
@@ -178,7 +179,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ),
                             const SizedBox(height: 10),
                             ElevatedButton(
-                              onPressed: () => context.read<PostBloc>().add(const GetPosts()),
+                              onPressed: () => context.read<PostBloc>().add(GetPosts(userId: firebase_auth.FirebaseAuth.instance.currentUser?.uid ?? '')),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 shape: RoundedRectangleBorder(

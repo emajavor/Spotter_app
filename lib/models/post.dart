@@ -101,11 +101,9 @@ class Post {
   final List<ExerciseEntry> exercises;
   final String userId;
   final String username;
-  final List<String> likes; // Added: List of user IDs who liked the post
-  final List<Comment> comments; // Added: List of comments  @override
-  String toString() {
-    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, location: $location, date: $date, photoURL: $photoURL, likes: ${likes.length}, comments: ${comments.length})';
-  }
+  final List<String> likes;
+  final List<Comment> comments;
+  final bool isPublic;
 
   Post({
     required this.id,
@@ -120,6 +118,7 @@ class Post {
     required this.username,
     this.likes = const [],
     this.comments = const [],
+    this.isPublic = true,
   });
 
   Post copyWith({
@@ -135,6 +134,7 @@ class Post {
     List<ExerciseEntry>? exercises,
     List<String>? likes,
     List<Comment>? comments,
+    bool? isPublic,
   }) {
     return Post(
       id: id ?? this.id,
@@ -149,6 +149,7 @@ class Post {
       exercises: exercises ?? this.exercises,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
+      isPublic: isPublic ?? this.isPublic,
     );
   }
 
@@ -176,6 +177,7 @@ class Post {
             ?.map((e) => Comment.fromJson(e as Map<String, dynamic>))
             .toList() ??
             [],
+        isPublic: json['isPublic'] as bool? ?? true,
       );
     } catch (e) {
       print("Error parsing post ${json['id']}: $e");
@@ -197,6 +199,7 @@ class Post {
       'username': username,
       'likes': likes,
       'comments': comments.map((e) => e.toJson()).toList(),
+      'isPublic': isPublic,
     };
   }
 
@@ -214,6 +217,13 @@ class Post {
       default:
         return Intensity.none;
     }
+  }
+
+  @override
+  String toString() {
+    return 'Post(id: $id, userId: $userId, username: $username, workout_type: $workout_type, '
+        'location: $location, date: $date, photoURL: $photoURL, likes: ${likes.length}, '
+        'comments: ${comments.length}, isPublic: $isPublic)';
   }
 }
 
