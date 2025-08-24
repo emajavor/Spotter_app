@@ -83,7 +83,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(const AddingLocation());
     _location = event.addedLocation;
     if(_location.isEmpty){
-      emit(EmptyLocation());
+      emit(const EmptyLocation());
     }
     else {
       emit(AddedLocation(_location));
@@ -94,7 +94,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     emit(const AddingPlaylist());
     _playlist = event.addedPlaylist;
     if(_playlist.isEmpty){
-      emit(EmptyPlaylist());
+      emit(const EmptyPlaylist());
 
     }
     else {
@@ -136,7 +136,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
             return b.id.compareTo(a.id);
           }
         });
-      print('Fetched posts: ${sortedPosts.length}, userId: ${event.userId}');
       emit(FetchedPosts(sortedPosts));
     } catch (e) {
       emit(FetchingFailed(e.toString()));
@@ -241,7 +240,6 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   }
 
   FutureOr<void> _onTogglePostVisibility(TogglePostVisibility event, Emitter<PostState> emit) {
-    print('Toggling post visibility to: ${event.isPublic}');
     _isPublic = event.isPublic;
     emit(PostVisibilityToggled(_isPublic));
   }

@@ -278,7 +278,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                         final uri = Uri.tryParse(cleanUrl);
                                         if (uri == null || !uri.hasAbsolutePath) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Invalid URL format')),
+                                            const SnackBar(content: Text('Invalid URL format')),
                                           );
                                           return;
                                         }
@@ -305,18 +305,17 @@ class _FeedScreenState extends State<FeedScreen> {
 
                                           if (!launched) {
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Unable to open link')),
+                                              const SnackBar(content: Text('Unable to open link')),
                                             );
                                           }
                                         } catch (e) {
-                                          print('Error launching URL $cleanUrl: $e');
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(content: Text('Error opening link: $e')),
                                           );
                                         }
                                       } else {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('No playlist link available')),
+                                          const SnackBar(content: Text('No playlist link available')),
                                         );
                                       }
                                     },

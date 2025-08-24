@@ -443,17 +443,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                         );
                                       } catch (e) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Ne mogu otvoriti link')),
+                                          const SnackBar(content: Text('Can not open the link')),
                                         );
                                       }
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Nevažeći format URL-a')),
+                                        const SnackBar(content: Text('Nevažeći format URL-a')),
                                       );
                                     }
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Nema dostupnog linka za playlistu')),
+                                      const SnackBar(content: Text('No playlist link available')),
                                     );
                                   }
                                 },

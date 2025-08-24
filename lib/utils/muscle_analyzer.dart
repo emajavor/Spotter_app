@@ -14,19 +14,4 @@ class MuscleAnalyzer {
 
     return muscleMap;
   }
-
-  /*static Map<String, String> classifyMuscleLoad(Map<String, int> muscleSets) { //Classifies each muscle group and provides recommendations (e.g., "add 2-12 sets" when undertrained).
-    final Map<String, String> statusMap = {};
-    for (var muscle in muscleSets.keys) {
-      final sets = muscleSets[muscle]!;
-      if (sets < 10) {
-        statusMap[muscle] = 'Undertrained (add ${10 - sets}-${20 - sets} sets)';
-      } else if (sets > 20) {
-        statusMap[muscle] = 'Overtrained (reduce by ${sets - 20} sets)';
-      } else {
-        statusMap[muscle] = 'Balanced';
-      }
-    }
-    return statusMap;
-  }*/
 }

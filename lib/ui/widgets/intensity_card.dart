@@ -27,7 +27,7 @@ class IntensityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Intensity',
             style: TextStyle(
               color: Colors.white,
@@ -46,7 +46,7 @@ class IntensityCard extends StatelessWidget {
   }
 
   List<Widget> _buildIntensityBars(Intensity intensity) {
-    final Color active = const Color(0xFF00FFBB);
+    const Color active = Color(0xFF00FFBB);
     final Color inactive = Colors.grey[800]!;
 
     int level = 0;

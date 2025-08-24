@@ -7,7 +7,7 @@ import 'package:spotter_app/ui/plan_workout_screen.dart';
 import 'feed_screen.dart';
 
 // Main screen with BottomNavigationBar
-class HomeScreen extends StatefulWidget { //stateful jer cemo mijenjanjem indexa upravljati navigacijom
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override

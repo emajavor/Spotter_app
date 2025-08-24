@@ -26,8 +26,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
   }
 
   FutureOr<void> _onAddPlannedExercise(AddPlannedExercise event, Emitter<PlanWorkoutState> emit) {
-    print('Adding exercise: ${event.exercise.name}, sets: ${event.exercise.sets}, isCompleted: ${event.exercise.isCompleted}');
-    // Stvaramo potpuno novu listu s dubokom kopijom
     List<Post> updatedWorkouts = _plannedWorkouts
         .map((workout) => workout.copyWith(
       exercises: workout.exercises
@@ -58,7 +56,7 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       ));
     }
 
-    // Dodajemo novu vježbu u posljednji trening
+
     final currentWorkout = updatedWorkouts.last;
     final updatedExercises = List<ExerciseEntry>.from(currentWorkout.exercises)
       ..add(event.exercise.copyWith(
@@ -69,7 +67,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       ));
     updatedWorkouts.last = currentWorkout.copyWith(exercises: updatedExercises);
 
-    // Ažuriramo _plannedWorkouts
     _plannedWorkouts.clear();
     _plannedWorkouts.addAll(updatedWorkouts);
 
@@ -95,9 +92,8 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       }
     }
 
-    print('After adding exercise, workouts: ${updatedWorkoutsString(updatedWorkouts)}');
     emit(PlanWorkoutState(
-      workouts: List.from(updatedWorkouts), // Nova instanca za prisilno ažuriranje
+      workouts: List.from(updatedWorkouts),
       muscleSets: Map.from(muscleSets),
       muscleStatus: Map.from(muscleStatus),
       muscleRecommendations: Map.from(muscleRecommendations),
@@ -105,8 +101,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
   }
 
   FutureOr<void> _onAddNewWorkout(AddNewWorkout event, Emitter<PlanWorkoutState> emit) {
-    print('Adding new workout');
-    // Stvaramo potpuno novu listu s dubokom kopijom
     List<Post> updatedWorkouts = _plannedWorkouts
         .map((workout) => workout.copyWith(
       exercises: workout.exercises
@@ -120,7 +114,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
     ))
         .toList();
 
-    // Dodajemo novi prazan trening
     updatedWorkouts.add(Post(
       id: 'workout_${updatedWorkouts.length + 1}',
       date: DateTime.now(),
@@ -136,7 +129,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       comments: const [],
     ));
 
-    // Ažuriramo _plannedWorkouts
     _plannedWorkouts.clear();
     _plannedWorkouts.addAll(updatedWorkouts);
 
@@ -162,9 +154,8 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       }
     }
 
-    print('After adding new workout, workouts: ${updatedWorkoutsString(updatedWorkouts)}');
     emit(PlanWorkoutState(
-      workouts: List.from(updatedWorkouts), // Nova instanca za prisilno ažuriranje
+      workouts: List.from(updatedWorkouts),
       muscleSets: Map.from(muscleSets),
       muscleStatus: Map.from(muscleStatus),
       muscleRecommendations: Map.from(muscleRecommendations),
@@ -172,8 +163,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
   }
 
   FutureOr<void> _onToggleExerciseCompleted(ToggleExerciseCompleted event, Emitter<PlanWorkoutState> emit) {
-    print('Toggling exercise at workoutIndex: ${event.workoutIndex}, exerciseIndex: ${event.exerciseIndex}');
-    // Stvaramo potpuno novu listu s dubokom kopijom
     List<Post> updatedWorkouts = _plannedWorkouts
         .map((workout) => workout.copyWith(
       exercises: workout.exercises
@@ -191,12 +180,10 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
       final exercises = updatedWorkouts[event.workoutIndex].exercises;
       if (event.exerciseIndex >= 0 && event.exerciseIndex < exercises.length) {
         final exercise = exercises[event.exerciseIndex];
-        print('Toggling ${exercise.name}, isCompleted: ${!exercise.isCompleted}');
         final updatedExercises = List<ExerciseEntry>.from(exercises);
         updatedExercises[event.exerciseIndex] = exercise.copyWith(isCompleted: !exercise.isCompleted);
         updatedWorkouts[event.workoutIndex] = updatedWorkouts[event.workoutIndex].copyWith(exercises: updatedExercises);
 
-        // Ažuriramo _plannedWorkouts
         _plannedWorkouts.clear();
         _plannedWorkouts.addAll(updatedWorkouts);
 
@@ -222,9 +209,8 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
           }
         }
 
-        print('After toggling, workouts: ${updatedWorkoutsString(updatedWorkouts)}');
         emit(PlanWorkoutState(
-          workouts: List.from(updatedWorkouts), // Nova instanca za prisilno ažuriranje
+          workouts: List.from(updatedWorkouts),
           muscleSets: Map.from(muscleSets),
           muscleStatus: Map.from(muscleStatus),
           muscleRecommendations: Map.from(muscleRecommendations),
@@ -238,7 +224,6 @@ class PlanWorkoutBloc extends Bloc<PlanWorkoutEvent, PlanWorkoutState> {
   }
 
   FutureOr<void> _onClearPlan(ClearPlan event, Emitter<PlanWorkoutState> emit) {
-    print('Clearing plan');
     _plannedWorkouts.clear();
     emit(const PlanWorkoutState());
   }

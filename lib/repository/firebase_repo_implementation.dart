@@ -160,7 +160,6 @@ class FirebaseRepo implements IFirebaseRepo {
       if (doc.exists) {
         return Post.fromJson(doc.data() as Map<String, dynamic>);
       }
-      print("Post not found: $id");
       return null;
     } catch (e) {
       print("Error getting post: $e");
